@@ -1,10 +1,7 @@
 local WindUI = (function()
     local url = "https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"
     local raw = game:HttpGet(url)
-    local patched = raw:gsub(
-        'IconLabelFrame = New%( "ImageLabel", %{',
-        'IconLabelFrame = New( "Frame", {'
-    )
+    local patched = raw:gsub('New%( "ImageLabel"', 'New( "Frame"')
     return loadstring(patched)()
 end)()
 
