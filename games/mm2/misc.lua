@@ -42,14 +42,6 @@ end
 CreatePlayerDropdown()
 
 MiscTab:Button({
-    Title = "Refresh Players",
-    Callback = function()
-        CreatePlayerDropdown()
-        WindUI:Notify({ Title = "Misc", Content = "Player list refreshed", Duration = 2 })
-    end
-})
-
-MiscTab:Button({
     Title = "Teleport to Selected Player",
     Callback = function()
         local localPlayer = game.Players.LocalPlayer
