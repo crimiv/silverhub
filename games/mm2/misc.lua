@@ -208,52 +208,75 @@ MiscTab:Button({
 
         local HttpService = game:GetService("HttpService")
         local TeleportService = game:GetService("TeleportService")
-
         local currentJobId = game.JobId
         local minPlayers = 5
+        local maxRetries = 5
+        local attempts = 0
+        local candidates = nil
 
-        local success, result = pcall(function()
-            return game:HttpGet("https://games.roblox.com/v1/games/" .. placeId .. "/servers/Public?limit=100")
-        end)
+        local function fetchServers()
+            local success, result = pcall(function()
+                return game:HttpGet("https://games.roblox.com/v1/games/" .. placeId .. "/servers/Public?limit=100")
+            end)
+            if not success then
+                return nil
+            end
+            local decoded
+            pcall(function()
+                decoded = HttpService:JSONDecode(result)
+            end)
+            if not decoded or not decoded.data then
+                return nil
+            end
+            local servers = {}
+            for _, server in ipairs(decoded.data) do
+                if server.id ~= currentJobId and server.playing >= minPlayers then
+                    table.insert(servers, server.id)
+                end
+            end
+            return servers
+        end
 
-        if not success then
+        candidates = fetchServers()
+        if not candidates then
             WindUI:Notify({ Title = "Error", Content = "Failed to fetch server list", Duration = 2 })
             return
         end
 
-        local decoded
-        pcall(function()
-            decoded = HttpService:JSONDecode(result)
-        end)
-
-        if not decoded or not decoded.data then
-            WindUI:Notify({ Title = "Error", Content = "Invalid server data", Duration = 2 })
-            return
-        end
-
-        local servers = {}
-        for _, server in ipairs(decoded.data) do
-            if server.id ~= currentJobId and server.playing >= minPlayers then
-                table.insert(servers, server.id)
-            end
-        end
-
-        if #servers == 0 then
+        if #candidates == 0 then
             WindUI:Notify({ Title = "Server Hop", Content = "No suitable servers found", Duration = 2 })
             return
         end
 
-        local targetServer = servers[math.random(1, #servers)]
+        while attempts < maxRetries do
+            attempts = attempts + 1
+            local idx = math.random(1, #candidates)
+            local targetServer = candidates[idx]
+            table.remove(candidates, idx)
 
-        local success2, result2 = pcall(function()
-            TeleportService:TeleportToPlaceInstance(placeId, targetServer, game.Players.LocalPlayer)
-        end)
+            local success, err = pcall(function()
+                TeleportService:TeleportToPlaceInstance(placeId, targetServer, game.Players.LocalPlayer)
+            end)
 
-        if not success2 then
-            WindUI:Notify({ Title = "Server Hop", Content = "Failed to teleport: " .. tostring(result2), Duration = 3 })
-        else
-            WindUI:Notify({ Title = "Server Hop", Content = "Teleporting to new server...", Duration = 2 })
+            if success then
+                WindUI:Notify({ Title = "Server Hop", Content = "Teleporting to new server...", Duration = 2 })
+                return
+            else
+                local errStr = tostring(err)
+                if errStr:find("772") or errStr:lower():find("full") then
+                    if #candidates == 0 then
+                        WindUI:Notify({ Title = "Server Hop", Content = "All servers are full. Try again later.", Duration = 3 })
+                        return
+                    end
+                    WindUI:Notify({ Title = "Server Hop", Content = "Server full, trying another... (" .. attempts .. "/" .. maxRetries .. ")", Duration = 2 })
+                else
+                    WindUI:Notify({ Title = "Error", Content = "Failed to teleport: " .. errStr, Duration = 3 })
+                    return
+                end
+            end
         end
+
+        WindUI:Notify({ Title = "Server Hop", Content = "Max retries reached. Try again later.", Duration = 3 })
     end
 })
 
