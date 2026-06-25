@@ -1,8 +1,8 @@
-local WindUI = SilverHub.WindUI
-local utils = SilverHub.Utils
-local config = SilverHub.Config
+local WindUI = AppleHub.WindUI
+local utils = AppleHub.Utils
+local config = AppleHub.Config
 
-local CombatTab = SilverHub.Window:Tab({ Title = "Combat" })
+local CombatTab = AppleHub.Window:Tab({ Title = "Combat" })
 
 local roundTimer = workspace:FindFirstChild("RoundTimerPart")
 
@@ -29,12 +29,12 @@ local lastAutoShootTime = 0
 local function ShootAtMurderer(silent)
     local localPlayer = game.Players.LocalPlayer
     if not localPlayer then
-        if not silent then return end
+        if not silent then WindUI:Notify({ Title = "Error", Content = "Local player not found", Duration = 2 }) end
         return
     end
-    local murderer = SilverHub.GetCurrentMurderer()
+    local murderer = AppleHub.GetCurrentMurderer()
     if not murderer then
-        if not silent then return end
+        if not silent then WindUI:Notify({ Title = "Error", Content = "No murderer found", Duration = 2 }) end
         return
     end
     local gun = nil
@@ -56,17 +56,17 @@ local function ShootAtMurderer(silent)
         end
     end
     if not gun then
-        if not silent then return end
+        if not silent then WindUI:Notify({ Title = "Error", Content = "You don't have a gun", Duration = 2 }) end
         return
     end
     local character = localPlayer.Character
     if not character then
-        if not silent then return end
+        if not silent then WindUI:Notify({ Title = "Error", Content = "Character not found", Duration = 2 }) end
         return
     end
     local rootPart = character:FindFirstChild("HumanoidRootPart")
     if not rootPart then
-        if not silent then return end
+        if not silent then WindUI:Notify({ Title = "Error", Content = "HumanoidRootPart not found", Duration = 2 }) end
         return
     end
     local targetPos = nil
@@ -82,7 +82,7 @@ local function ShootAtMurderer(silent)
         end
     end
     if not targetPos then
-        if not silent then return end
+        if not silent then WindUI:Notify({ Title = "Error", Content = "Murderer has no valid character", Duration = 2 }) end
         return
     end
     local originalCFrame = rootPart.CFrame
@@ -95,11 +95,14 @@ local function ShootAtMurderer(silent)
     if shootRemote and shootRemote:IsA("RemoteEvent") then
         shootRemote:FireServer(originCFrame, targetCFrame)
     else
-        if not silent then return end
+        if not silent then WindUI:Notify({ Title = "Error", Content = "Shoot remote not found", Duration = 2 }) end
         rootPart.CFrame = originalCFrame
         return
     end
     rootPart.CFrame = originalCFrame
+    if not silent then
+        WindUI:Notify({ Title = "Combat", Content = "Shot fired at murderer!", Duration = 2 })
+    end
 end
 
 game:GetService("RunService").Heartbeat:Connect(function()
@@ -124,6 +127,11 @@ CombatTab:Toggle({
     Value = false,
     Callback = function(state)
         autoShootEnabled = state
+        WindUI:Notify({
+            Title = "Auto Shoot",
+            Content = autoShootEnabled and "Enabled" or "Disabled",
+            Duration = 2,
+        })
         if autoShootEnabled then
             lastAutoShootTime = tick()
         end
@@ -134,7 +142,10 @@ CombatTab:Button({
     Title = "Kill All",
     Callback = function()
         local localPlayer = game.Players.LocalPlayer
-        if not localPlayer then return end
+        if not localPlayer then
+            WindUI:Notify({ Title = "Error", Content = "Local player not found", Duration = 2 })
+            return
+        end
         local knife = nil
         local backpack = localPlayer:FindFirstChild("Backpack")
         if backpack then
@@ -153,16 +164,29 @@ CombatTab:Button({
                 end
             end
         end
-        if not knife then return end
+        if not knife then
+            WindUI:Notify({ Title = "Error", Content = "You are not the murderer (no knife found)", Duration = 2 })
+            return
+        end
         local handleTouched = knife:FindFirstChild("Events") and knife.Events:FindFirstChild("HandleTouched")
-        if not handleTouched or not handleTouched:IsA("RemoteEvent") then return end
+        if not handleTouched or not handleTouched:IsA("RemoteEvent") then
+            WindUI:Notify({ Title = "Error", Content = "HandleTouched remote not found", Duration = 2 })
+            return
+        end
+        local killed = 0
         for _, player in pairs(game.Players:GetPlayers()) do
             if player ~= localPlayer and player.Character then
                 local rootPart = player.Character:FindFirstChild("HumanoidRootPart")
                 if rootPart then
                     handleTouched:FireServer(rootPart)
+                    killed = killed + 1
                 end
             end
+        end
+        if killed > 0 then
+            WindUI:Notify({ Title = "Kill All", Content = "Killed " .. killed .. " players!", Duration = 2 })
+        else
+            WindUI:Notify({ Title = "Kill All", Content = "No valid players to kill", Duration = 2 })
         end
     end
 })
@@ -220,6 +244,11 @@ CombatTab:Toggle({
     Value = false,
     Callback = function(state)
         autoKillAllEnabled = state
+        WindUI:Notify({
+            Title = "Auto Kill All",
+            Content = autoKillAllEnabled and "Enabled" or "Disabled",
+            Duration = 2,
+        })
         if autoKillAllEnabled then
             lastAutoKillAllTime = tick()
         end
@@ -335,12 +364,25 @@ CombatTab:Button({
     Title = "TP to Gun",
     Callback = function()
         local localPlayer = game.Players.LocalPlayer
-        if not localPlayer then return end
-        if not IsPlayerAlive() or not IsRoundActive() then return end
-        if utils.PlayerHasTool(localPlayer, "Knife") then return end
+        if not localPlayer then
+            WindUI:Notify({ Title = "Error", Content = "Local player not found", Duration = 2 })
+            return
+        end
+        if not IsPlayerAlive() or not IsRoundActive() then
+            WindUI:Notify({ Title = "TP to Gun", Content = "You are dead or round inactive", Duration = 2 })
+            return
+        end
+        if utils.PlayerHasTool(localPlayer, "Knife") then
+            WindUI:Notify({ Title = "TP to Gun", Content = "You are the murderer! Cannot teleport to GunDrop.", Duration = 2 })
+            return
+        end
         local gunDrop = GetClosestGunDrop()
-        if not gunDrop then return end
+        if not gunDrop then
+            WindUI:Notify({ Title = "TP to Gun", Content = "No GunDrop found", Duration = 2 })
+            return
+        end
         TeleportToGunDrop(gunDrop)
+        WindUI:Notify({ Title = "TP to Gun", Content = "Teleported and returned after collecting gun", Duration = 2 })
     end
 })
 
@@ -404,7 +446,7 @@ local function SetupAutoGunTP()
         end)
     end
     currentSheriff = nil
-    for player, role in pairs(SilverHub.playerRoles) do
+    for player, role in pairs(AppleHub.playerRoles) do
         if role == "sheriff" then
             currentSheriff = player
             break
@@ -432,6 +474,11 @@ CombatTab:Toggle({
     Value = false,
     Callback = function(state)
         autoGunTPEnabled = state
+        WindUI:Notify({
+            Title = "Auto TP to Gun",
+            Content = autoGunTPEnabled and "Enabled" or "Disabled",
+            Duration = 2,
+        })
         if state then
             SetupAutoGunTP()
         else
