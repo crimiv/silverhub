@@ -27,7 +27,7 @@ local function CheckExecutor()
     if #missing > 0 then
         WindUI:Notify({
             Title = "Executor Incompatible",
-            Content = "Missing essential functions: " .. table.concat(missing, ", ") .. ". MM2 features will not work.",
+            Content = "Missing essential functions: " .. table.concat(missing, ", ") .. ". Hub will not load.",
             Duration = 5,
         })
         return false
