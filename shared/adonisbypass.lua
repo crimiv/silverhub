@@ -19,7 +19,6 @@ return function()
 
     local function smartWait()
         local startTime = tick()
-        local maxWait = CONFIG.DELAY + 5
         
         while tick() - startTime < CONFIG.DELAY do
             local adonisReady = false
@@ -337,7 +336,7 @@ return function()
                     local rlocked = rawget(v, "RLocked")
                     
                     if detected and typeof(detected) == "function" and rlocked then
-                        local hookSuccess = pcall(function()
+                        pcall(function()
                             local oldDetected = detected
                             hookfunction(detected, function(action, info, crash)
                                 if action == "_" and info == "_" and crash == false then
@@ -346,9 +345,6 @@ return function()
                                 return task.wait(9e9)
                             end)
                         end)
-                        
-                        if hookSuccess then
-                        end
                         break
                     end
                 end
@@ -359,8 +355,6 @@ return function()
             end
         end)
     end
-
-    local bypassSuccess = bypassLoaded or metaProtected
 
     task.wait(0.5)
 
