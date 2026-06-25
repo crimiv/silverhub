@@ -8,6 +8,16 @@ local function TeleportToLobby()
         WindUI:Notify({ Title = "Error", Content = "Local player not found", Duration = 2 })
         return
     end
+    local character = localPlayer.Character
+    if not character then
+        WindUI:Notify({ Title = "Error", Content = "Character not found", Duration = 2 })
+        return
+    end
+    local rootPart = character:FindFirstChild("HumanoidRootPart")
+    if not rootPart then
+        WindUI:Notify({ Title = "Error", Content = "HumanoidRootPart not found", Duration = 2 })
+        return
+    end
     local lobby = workspace:FindFirstChild("RegularLobby")
     if not lobby then
         WindUI:Notify({ Title = "Error", Content = "RegularLobby not found", Duration = 2 })
@@ -16,9 +26,8 @@ local function TeleportToLobby()
     local parts = lobby:GetDescendants()
     for _, part in ipairs(parts) do
         if part:IsA("BasePart") then
-            if AppleHub.TeleportToCFrame(part.CFrame) then
-                WindUI:Notify({ Title = "Teleport", Content = "Teleported to lobby", Duration = 2 })
-            end
+            rootPart.CFrame = part.CFrame
+            WindUI:Notify({ Title = "Teleport", Content = "Teleported to lobby", Duration = 2 })
             return
         end
     end
@@ -26,6 +35,21 @@ local function TeleportToLobby()
 end
 
 local function TeleportToCurrentMap()
+    local localPlayer = game.Players.LocalPlayer
+    if not localPlayer then
+        WindUI:Notify({ Title = "Error", Content = "Local player not found", Duration = 2 })
+        return
+    end
+    local character = localPlayer.Character
+    if not character then
+        WindUI:Notify({ Title = "Error", Content = "Character not found", Duration = 2 })
+        return
+    end
+    local rootPart = character:FindFirstChild("HumanoidRootPart")
+    if not rootPart then
+        WindUI:Notify({ Title = "Error", Content = "HumanoidRootPart not found", Duration = 2 })
+        return
+    end
     local currentMapContainer = nil
     if currentMap then
         local map = workspace:FindFirstChild(currentMap)
@@ -80,9 +104,8 @@ local function TeleportToCurrentMap()
         WindUI:Notify({ Title = "Error", Content = "No BasePart found in map", Duration = 2 })
         return
     end
-    if AppleHub.TeleportToCFrame(targetPart.CFrame) then
-        WindUI:Notify({ Title = "Teleport", Content = "Teleported to current map", Duration = 2 })
-    end
+    rootPart.CFrame = targetPart.CFrame
+    WindUI:Notify({ Title = "Teleport", Content = "Teleported to current map", Duration = 2 })
 end
 
 TeleportTab:Button({
