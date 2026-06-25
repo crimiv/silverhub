@@ -215,5 +215,45 @@ TrollTab:Button({
     end
 })
 
+local loopFlingSelectedEnabled = false
+local loopFlingSelectedCoroutine = nil
+
+TrollTab:Toggle({
+    Title = "Loop Fling Selected Player",
+    Value = false,
+    Callback = function(state)
+        loopFlingSelectedEnabled = state
+        if loopFlingSelectedEnabled then
+            if loopFlingSelectedCoroutine then
+                loopFlingSelectedCoroutine = nil
+            end
+            loopFlingSelectedCoroutine = coroutine.create(function()
+                while loopFlingSelectedEnabled do
+                    if selectedFlingPlayer and selectedFlingPlayer ~= "No other players" then
+                        local targetPlayer = game.Players:FindFirstChild(selectedFlingPlayer)
+                        if targetPlayer then
+                            local launched = FlingPlayer(targetPlayer, true)
+                            if launched then
+                                task.wait(0.5)
+                            else
+                                task.wait(0.1)
+                            end
+                        else
+                            task.wait(0.5)
+                        end
+                    else
+                        task.wait(0.5)
+                    end
+                end
+            end)
+            coroutine.resume(loopFlingSelectedCoroutine)
+        else
+            if loopFlingSelectedCoroutine then
+                loopFlingSelectedCoroutine = nil
+            end
+        end
+    end
+})
+
 game.Players.PlayerAdded:Connect(CreateFlingDropdown)
 game.Players.PlayerRemoving:Connect(CreateFlingDropdown)
