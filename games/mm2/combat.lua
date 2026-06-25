@@ -130,6 +130,7 @@ CombatTab:Toggle({
     Callback = function(state)
         autoShootEnabled = state
         AppleHub.Toggles.autoShootEnabled = state
+        if AppleHub.SaveSettings then AppleHub.SaveSettings() end
         WindUI:Notify({
             Title = "Auto Shoot",
             Content = autoShootEnabled and "Enabled" or "Disabled",
@@ -251,6 +252,7 @@ CombatTab:Toggle({
     Callback = function(state)
         autoKillAllEnabled = state
         AppleHub.Toggles.autoKillAllEnabled = state
+        if AppleHub.SaveSettings then AppleHub.SaveSettings() end
         WindUI:Notify({
             Title = "Auto Kill All",
             Content = autoKillAllEnabled and "Enabled" or "Disabled",
@@ -489,6 +491,7 @@ CombatTab:Toggle({
     Callback = function(state)
         autoGunTPEnabled = state
         AppleHub.Toggles.autoGunTPEnabled = state
+        if AppleHub.SaveSettings then AppleHub.SaveSettings() end
         WindUI:Notify({
             Title = "Auto TP to Gun",
             Content = autoGunTPEnabled and "Enabled" or "Disabled",
@@ -509,5 +512,6 @@ AppleHub.DisableAll = function()
     AppleHub.Toggles.autoKillAllEnabled = false
     autoGunTPEnabled = false
     AppleHub.Toggles.autoGunTPEnabled = false
+    if AppleHub.SaveSettings then AppleHub.SaveSettings() end
     CleanupAutoGunTP()
 end
