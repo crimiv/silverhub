@@ -4,7 +4,7 @@ local config = AppleHub.Config
 
 local VisualTab = AppleHub.Window:Tab({ Title = "Visual" })
 
-local espEnabled = false
+local espEnabled = AppleHub.Toggles.espEnabled or false
 local highlightInstances = {}
 local playerRoles = {}
 
@@ -181,9 +181,10 @@ end)
 
 VisualTab:Toggle({
     Title = "ESP",
-    Value = false,
+    Value = espEnabled,
     Callback = function(state)
         espEnabled = state
+        AppleHub.Toggles.espEnabled = state
         WindUI:Notify({
             Title = "ESP",
             Content = espEnabled and "ESP Enabled" or "ESP Disabled",
