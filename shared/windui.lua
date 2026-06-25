@@ -7,6 +7,8 @@ local WindUI = (function()
         :gsub('Instance%.new%s*%(%s*"ImageLabel"%s*,', 'Instance.new("Frame",')
         :gsub('Instance%.new%(%s*"ImageLabel"%s*,', 'Instance.new("Frame",')
         :gsub('"ImageLabel"%s*,', '"Frame",')
+        :gsub('Image%s*=%s*[^,}]+', '')
+        :gsub('%.Image%s*=%s*[^;]+;', '')
     return loadstring(patched)()
 end)()
 
