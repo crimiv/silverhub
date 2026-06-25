@@ -100,6 +100,7 @@ CombatTab:Toggle({
     Callback = function(state)
         Config.Enabled = state
         AppleHub.Toggles.silentAimEnabled = state
+        if AppleHub.SaveSettings then AppleHub.SaveSettings() end
         WindUI:Notify({
             Title = "Silent Aim",
             Content = Config.Enabled and "Enabled" or "Disabled",
@@ -111,5 +112,6 @@ CombatTab:Toggle({
 AppleHub.DisableAll = function()
     Config.Enabled = false
     AppleHub.Toggles.silentAimEnabled = false
+    if AppleHub.SaveSettings then AppleHub.SaveSettings() end
     targetPosition = nil
 end
