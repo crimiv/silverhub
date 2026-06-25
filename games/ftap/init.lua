@@ -83,9 +83,6 @@ local Window = WindUI:CreateWindow({
     SideBarWidth = 200,
     HideSearchBar = true,
     ScrollBarEnabled = false,
-    User = {
-        Enabled = false,
-    },
 })
 
 Window:SetToggleKey(Enum.KeyCode.K)
