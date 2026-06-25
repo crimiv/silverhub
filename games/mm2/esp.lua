@@ -6,6 +6,7 @@ local VisualTab = AppleHub.Window:Tab({ Title = "Visual" })
 
 local espEnabled = AppleHub.Toggles.espEnabled or false
 local highlightInstances = {}
+local espUpdateCooldown = 0
 
 local function GetPlayerRoleColor(player)
     if not player then return nil end
@@ -118,7 +119,11 @@ end)
 game:GetService("RunService").Heartbeat:Connect(function()
     if _G.APPLE_HUB_UPDATING then return end
     if espEnabled then
-        UpdateESP()
+        local now = tick()
+        if now - espUpdateCooldown >= 0.3 then
+            espUpdateCooldown = now
+            UpdateESP()
+        end
     end
 end)
 
