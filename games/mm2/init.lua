@@ -36,13 +36,6 @@ AppleHub.Utils = utils
 AppleHub.Config = config
 AppleHub.Toggles = AppleHub.Toggles or {}
 
-if _G.APPLE_HUB_STATES then
-    for key, value in pairs(_G.APPLE_HUB_STATES) do
-        AppleHub.Toggles[key] = value
-    end
-    _G.APPLE_HUB_STATES = nil
-end
-
 local version = APPLE_HUB_VERSION or "1.0.0"
 
 local Window = WindUI:CreateWindow({
@@ -68,26 +61,19 @@ local Window = WindUI:CreateWindow({
 
 AppleHub.Window = Window
 
-task.spawn(function()
-    local success, remoteVersion = pcall(function()
-        return game:HttpGet(BASE_URL .. "version.txt")
-    end)
-    if success then
-        remoteVersion = remoteVersion:gsub("%s+", "")
-        if remoteVersion and remoteVersion ~= version then
-            WindUI:Notify({
-                Title = "Update Available",
-                Content = "New version " .. remoteVersion .. " is available. Reloading...",
-                Duration = 3,
-            })
-            task.wait(1)
-            loadstring(game:HttpGet(BASE_URL .. "main.lua"))()
-        end
-    end
-end)
-
 LoadScript("games/mm2/esp.lua")
 LoadScript("games/mm2/combat.lua")
 LoadScript("games/mm2/troll.lua")
 LoadScript("games/mm2/misc.lua")
 LoadScript("games/mm2/settings.lua")
+
+if _G.APPLE_HUB_STATES then
+    for key, value in pairs(_G.APPLE_HUB_STATES) do
+        AppleHub.Toggles[key] = value
+    end
+    _G.APPLE_HUB_STATES = nil
+end
+
+if AppleHub.RestoreStates then
+    AppleHub.RestoreStates()
+end
