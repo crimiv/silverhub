@@ -247,7 +247,9 @@ CombatTab:Button({
         local sheriff = AppleHub.GetCurrentSheriff()
         local killed = 0
         for _, player in pairs(game.Players:GetPlayers()) do
-            if player ~= localPlayer and player ~= sheriff and player.Character then
+            if player == localPlayer then continue end
+            if sheriff and player == sheriff then continue end
+            if player.Character then
                 local rootPart = player.Character:FindFirstChild("HumanoidRootPart")
                 if rootPart then
                     handleTouched:FireServer(rootPart)
@@ -260,6 +262,7 @@ CombatTab:Button({
         else
             WindUI:Notify({ Title = "Kill All Except Sheriff", Content = "No valid players to kill", Duration = 2 })
         end
+        if AppleHub.SaveSettings then AppleHub.SaveSettings() end
     end
 })
 
