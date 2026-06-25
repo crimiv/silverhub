@@ -34,6 +34,39 @@ AppleHub.WindUI = WindUI
 AppleHub.Utils = utils
 AppleHub.Config = config
 AppleHub.Toggles = AppleHub.Toggles or {}
+AppleHub.SettingsFile = "AppleHub/Settings.json"
+
+local function SaveSettings()
+    local success, result = pcall(function()
+        if not makefolder then return end
+        makefolder("AppleHub")
+        if not writefile then return end
+        local data = {
+            toggles = AppleHub.Toggles,
+            theme = AppleHub.CurrentTheme or "Silver",
+        }
+        writefile(AppleHub.SettingsFile, game:GetService("HttpService"):JSONEncode(data))
+    end)
+end
+
+local function LoadSettings()
+    local success, result = pcall(function()
+        if not isfile then return end
+        if isfile(AppleHub.SettingsFile) then
+            local data = game:GetService("HttpService"):JSONDecode(readfile(AppleHub.SettingsFile))
+            if data and data.toggles then
+                for key, value in pairs(data.toggles) do
+                    AppleHub.Toggles[key] = value
+                end
+            end
+            if data and data.theme then
+                AppleHub.CurrentTheme = data.theme
+            end
+        end
+    end)
+end
+
+LoadSettings()
 
 local version = APPLE_HUB_VERSION or "1.0.0"
 
@@ -46,7 +79,7 @@ local Window = WindUI:CreateWindow({
     MinSize = Vector2.new(560, 350),
     MaxSize = Vector2.new(850, 560),
     Transparent = true,
-    Theme = "Silver",
+    Theme = AppleHub.CurrentTheme or "Silver",
     Resizable = true,
     SideBarWidth = 200,
     HideSearchBar = true,
@@ -58,7 +91,11 @@ local Window = WindUI:CreateWindow({
     },
 })
 
+Window:SetToggleKey(Enum.KeyCode.K)
+
 AppleHub.Window = Window
+AppleHub.SaveSettings = SaveSettings
+AppleHub.LoadSettings = LoadSettings
 
 LoadScript("games/ftap/aimbot.lua")
 
@@ -72,3 +109,5 @@ end
 if AppleHub.RestoreStates then
     AppleHub.RestoreStates()
 end
+
+SaveSettings()
