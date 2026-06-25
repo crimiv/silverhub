@@ -39,7 +39,6 @@ local function SetupAntiFling()
         return nil
     end
 
-    local velocityResetCooldown = 0
     local lastResetTime = 0
 
     local function ResetVelocity()
@@ -108,8 +107,7 @@ local function SetupAntiFling()
     local heartbeatConn = game:GetService("RunService").Heartbeat:Connect(function()
         if _G.APPLE_HUB_UPDATING then return end
         if not antiFlingEnabled then return end
-        local success, err = pcall(DetectAndCounterFling)
-        if not success then end
+        pcall(DetectAndCounterFling)
     end)
     table.insert(antiFlingConnections, heartbeatConn)
 

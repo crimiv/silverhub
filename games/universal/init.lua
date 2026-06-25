@@ -85,9 +85,7 @@ local Window = WindUI:CreateWindow({
     HideSearchBar = true,
     ScrollBarEnabled = false,
     User = {
-        Enabled = true,
-        Anonymous = false,
-        Callback = function() end,
+        Enabled = false,
     },
 })
 
