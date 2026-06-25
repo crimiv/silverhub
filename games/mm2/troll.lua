@@ -13,7 +13,7 @@ end
 local function FlingPlayer(target, silent)
     if _G.APPLE_HUB_UPDATING then return false end
     if not target or target == game.Players.LocalPlayer then
-        if not silent then utils.Notify({ Title = "Fling", Content = "Invalid target", Duration = 2 }) end
+        if not silent then WindUI:Notify({ Title = "Fling", Content = "Invalid target", Duration = 2 }) end
         return false
     end
     local localPlayer = game.Players.LocalPlayer
@@ -22,11 +22,11 @@ local function FlingPlayer(target, silent)
     local tHrp = tChar and tChar:FindFirstChild("HumanoidRootPart")
     local tHum = tChar and tChar:FindFirstChildOfClass("Humanoid")
     if not hrp or not tHrp or not tHum or tHum.Health <= 0 then
-        if not silent then utils.Notify({ Title = "Fling", Content = "Target invalid or dead", Duration = 2 }) end
+        if not silent then WindUI:Notify({ Title = "Fling", Content = "Target invalid or dead", Duration = 2 }) end
         return false
     end
     if IsSeated(target) then
-        if not silent then utils.Notify({ Title = "Fling", Content = "Target is seated", Duration = 2 }) end
+        if not silent then WindUI:Notify({ Title = "Fling", Content = "Target is seated", Duration = 2 }) end
         return false
     end
     local originalFPDH = workspace.FallenPartsDestroyHeight
@@ -60,9 +60,9 @@ local function FlingPlayer(target, silent)
     hrp.CFrame = oldPos
     workspace.FallenPartsDestroyHeight = originalFPDH
     if launched then
-        if not silent then utils.Notify({ Title = "Fling", Content = "Flung " .. target.Name, Duration = 2 }) end
+        if not silent then WindUI:Notify({ Title = "Fling", Content = "Flung " .. target.Name, Duration = 2 }) end
     else
-        if not silent then utils.Notify({ Title = "Fling", Content = "Failed to fling " .. target.Name, Duration = 2 }) end
+        if not silent then WindUI:Notify({ Title = "Fling", Content = "Failed to fling " .. target.Name, Duration = 2 }) end
     end
     return launched
 end
@@ -75,7 +75,7 @@ TrollTab:Button({
         if murderer then
             FlingPlayer(murderer, false)
         else
-            utils.Notify({ Title = "Fling", Content = "No murderer found", Duration = 2 })
+            WindUI:Notify({ Title = "Fling", Content = "No murderer found", Duration = 2 })
         end
     end
 })
@@ -88,7 +88,7 @@ TrollTab:Button({
         if sheriff then
             FlingPlayer(sheriff, false)
         else
-            utils.Notify({ Title = "Fling", Content = "No sheriff found", Duration = 2 })
+            WindUI:Notify({ Title = "Fling", Content = "No sheriff found", Duration = 2 })
         end
     end
 })
@@ -105,7 +105,7 @@ TrollTab:Toggle({
         autoFlingMurdererEnabled = state
         AppleHub.Toggles.autoFlingMurdererEnabled = state
         if AppleHub.SaveSettings then AppleHub.SaveSettings() end
-        utils.Notify({
+        WindUI:Notify({
             Title = "Auto Fling Murderer",
             Content = autoFlingMurdererEnabled and "Enabled" or "Disabled",
             Duration = 2,
@@ -146,7 +146,7 @@ TrollTab:Toggle({
         autoFlingSheriffEnabled = state
         AppleHub.Toggles.autoFlingSheriffEnabled = state
         if AppleHub.SaveSettings then AppleHub.SaveSettings() end
-        utils.Notify({
+        WindUI:Notify({
             Title = "Auto Fling Sheriff",
             Content = autoFlingSheriffEnabled and "Enabled" or "Disabled",
             Duration = 2,
@@ -223,7 +223,7 @@ TrollTab:Button({
     Callback = function()
         if _G.APPLE_HUB_UPDATING then return end
         CreateFlingDropdown()
-        utils.Notify({ Title = "Fling Player", Content = "Player list refreshed", Duration = 2 })
+        WindUI:Notify({ Title = "Fling Player", Content = "Player list refreshed", Duration = 2 })
     end
 })
 
@@ -232,12 +232,12 @@ TrollTab:Button({
     Callback = function()
         if _G.APPLE_HUB_UPDATING then return end
         if not selectedFlingPlayer or selectedFlingPlayer == "No other players" then
-            utils.Notify({ Title = "Error", Content = "No valid player selected", Duration = 2 })
+            WindUI:Notify({ Title = "Error", Content = "No valid player selected", Duration = 2 })
             return
         end
         local targetPlayer = game.Players:FindFirstChild(selectedFlingPlayer)
         if not targetPlayer then
-            utils.Notify({ Title = "Error", Content = "Selected player not found", Duration = 2 })
+            WindUI:Notify({ Title = "Error", Content = "Selected player not found", Duration = 2 })
             return
         end
         task.spawn(function()
@@ -263,7 +263,7 @@ TrollTab:Toggle({
         loopFlingSelectedEnabled = state
         AppleHub.Toggles.loopFlingSelectedEnabled = state
         if AppleHub.SaveSettings then AppleHub.SaveSettings() end
-        utils.Notify({
+        WindUI:Notify({
             Title = "Loop Fling Selected Player",
             Content = loopFlingSelectedEnabled and "Enabled" or "Disabled",
             Duration = 2,

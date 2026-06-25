@@ -7,7 +7,17 @@ local function LoadAdmin(url)
         return loadstring(game:HttpGet(url))()
     end)
     if not success then
+        WindUI:Notify({
+            Title = "Error",
+            Content = "Failed to load admin script. Check your connection.",
+            Duration = 4,
+        })
     else
+        WindUI:Notify({
+            Title = "Admin Loaded",
+            Content = "Admin script executed successfully.",
+            Duration = 3,
+        })
     end
 end
 

@@ -14,6 +14,11 @@ local function CheckExecutor()
     if not task then table.insert(missing, "task") end
     if not pcall then table.insert(missing, "pcall") end
     if #missing > 0 then
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "Executor Incompatible",
+            Text = "Missing essential functions: " .. table.concat(missing, ", "),
+            Duration = 5,
+        })
         return false
     end
     return true

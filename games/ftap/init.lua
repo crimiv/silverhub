@@ -13,6 +13,11 @@ local function CheckExecutor()
     if not getnamecallmethod then table.insert(missing, "getnamecallmethod") end
     if not newcclosure then table.insert(missing, "newcclosure") end
     if #missing > 0 then
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "Executor Incompatible",
+            Text = "Missing functions: " .. table.concat(missing, ", ") .. ". Silent Aim will not work.",
+            Duration = 5,
+        })
         return false
     end
     return true
@@ -69,7 +74,6 @@ local Window = WindUI:CreateWindow({
     Title = "Apple Hub v" .. version,
     Author = "by coolio",
     Folder = "AppleHub",
-    Icon = "https://raw.githubusercontent.com/crimiv/applehub/refs/heads/main/icon/applehub.png",
     Size = UDim2.fromOffset(580, 460),
     MinSize = Vector2.new(560, 350),
     MaxSize = Vector2.new(850, 560),

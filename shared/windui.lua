@@ -5,9 +5,6 @@ local WindUI = (function()
     return loadstring(patched)()
 end)()
 
-function WindUI:Notify()
-end
-
 local function DefineTheme(name, colors)
     WindUI:AddTheme({
         Name = name,

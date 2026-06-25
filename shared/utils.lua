@@ -30,7 +30,4 @@ function AppleHub.PlayerHasTool(player, toolName)
     return false
 end
 
-function AppleHub.Notify(params)
-end
-
 return AppleHub
