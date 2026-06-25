@@ -1,5 +1,4 @@
 return {
-    version = "1.0.0",
     colors = {
         innocent = Color3.fromRGB(0, 255, 0),
         murderer = Color3.fromRGB(255, 0, 0),
