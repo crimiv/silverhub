@@ -34,6 +34,66 @@ local function IsInLobby()
     return rootPart:IsDescendantOf(lobby)
 end
 
+local function TeleportToLobby()
+    local localPlayer = game.Players.LocalPlayer
+    if not localPlayer then return end
+    local character = localPlayer.Character
+    if not character then return end
+    local rootPart = character:FindFirstChild("HumanoidRootPart")
+    if not rootPart then return end
+    local lobby = workspace:FindFirstChild("RegularLobby")
+    if not lobby then return end
+    local parts = lobby:GetDescendants()
+    for _, part in ipairs(parts) do
+        if part:IsA("BasePart") then
+            rootPart.CFrame = part.CFrame
+            break
+        end
+    end
+end
+
+local function ShouldTeleportToLobby()
+    local localPlayer = game.Players.LocalPlayer
+    if not localPlayer then return false end
+    if IsInLobby() then return false end
+    local hasGun = utils.PlayerHasTool(localPlayer, "Gun")
+    if not hasGun then return false end
+    local autoTP = AppleHub.Toggles.autoGunTPEnabled or false
+    local autoShoot = AppleHub.Toggles.autoShootEnabled or false
+    return autoTP and autoShoot
+end
+
+local function SetupLobbyTPOnGun()
+    local localPlayer = game.Players.LocalPlayer
+    if not localPlayer then return end
+    local function onGunAdded()
+        if ShouldTeleportToLobby() then
+            TeleportToLobby()
+        end
+    end
+    local backpack = localPlayer:FindFirstChild("Backpack")
+    if backpack then
+        backpack.ChildAdded:Connect(function(child)
+            if child.Name == "Gun" then
+                onGunAdded()
+            end
+        end)
+    end
+    local character = localPlayer.Character
+    if character then
+        character.ChildAdded:Connect(function(child)
+            if child.Name == "Gun" then
+                onGunAdded()
+            end
+        end)
+    end
+    if utils.PlayerHasTool(localPlayer, "Gun") then
+        onGunAdded()
+    end
+end
+
+task.spawn(SetupLobbyTPOnGun)
+
 local autoShootEnabled = AppleHub.Toggles.autoShootEnabled or false
 local AUTO_SHOOT_COOLDOWN = config.cooldowns.autoShoot
 local lastAutoShootTime = 0
