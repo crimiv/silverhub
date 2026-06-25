@@ -29,24 +29,108 @@ local function FlingPlayer(target, silent)
         if not silent then WindUI:Notify({ Title = "Fling", Content = "Target is seated", Duration = 2 }) end
         return false
     end
+    local function GetCharacterMass(char)
+        local mass = 0
+        for _, part in ipairs(char:GetDescendants()) do
+            if part:IsA("BasePart") then
+                local ok, m = pcall(function() return part:GetMass() end)
+                if ok and type(m) == "number" then
+                    mass = mass + m
+                else
+                    mass = mass + (part.Size.X * part.Size.Y * part.Size.Z)
+                end
+            end
+        end
+        return mass
+    end
+
+    local function ChooseFlingParams(localChar)
+        local hum = localChar and localChar:FindFirstChildOfClass("Humanoid")
+        local rig = hum and hum.RigType or Enum.HumanoidRigType.R15
+        local mass = GetCharacterMass(localChar)
+        local accessoryCount = 0
+        for _, v in ipairs(localChar:GetChildren()) do
+            if v:IsA("Accessory") then accessoryCount = accessoryCount + 1 end
+        end
+        -- Base velocity scales with mass and accessories (more accessories -> heavier)
+        local velocity = 300 + (mass * 8) + (accessoryCount * 40)
+        if rig == Enum.HumanoidRigType.R6 then
+            velocity = velocity * 0.9
+        else
+            velocity = velocity * 1.1
+        end
+        local angular = math.clamp(200 + (mass * 30) + (accessoryCount * 20), 1000, 1000000)
+        local maxForceY = math.max(1e5, mass * 8e3)
+        return velocity, angular, maxForceY
+    end
+
+    local function ChooseFlingMovement(localChar)
+        local hum = localChar and localChar:FindFirstChildOfClass("Humanoid")
+        local rig = hum and hum.RigType or Enum.HumanoidRigType.R15
+        local mass = GetCharacterMass(localChar)
+        local accessoryCount = 0
+        for _, v in ipairs(localChar:GetChildren()) do
+            if v:IsA("Accessory") then accessoryCount = accessoryCount + 1 end
+        end
+        -- Heavier avatars or many accessories favor wide lateral zigzags
+        if accessoryCount >= 6 or mass > 120 then
+            return function(startTime)
+                local t = tick() - startTime
+                local amp = math.clamp(2 + (accessoryCount * 0.4), 2, 8)
+                local freq = math.clamp(4 - (accessoryCount * 0.15), 1.5, 6)
+                local x = math.sin(t * freq * 2) * amp
+                local y = math.abs(math.sin(t * freq * 1.2)) * (2 + mass * 0.02)
+                local z = math.cos(t * freq * 1.4) * (amp * 0.6)
+                return Vector3.new(x, y, z)
+            end
+        end
+        -- R6 gets stronger vertical pulses
+        if rig == Enum.HumanoidRigType.R6 then
+            return function(startTime)
+                local t = tick() - startTime
+                local y = math.sin(t * 12) * (4 + mass * 0.03)
+                return Vector3.new(0, y, 0)
+            end
+        end
+        -- Default R15 / light avatars: spin + vertical jerks
+        return function(startTime)
+            local t = tick() - startTime
+            local amp = 1 + (accessoryCount * 0.5)
+            local x = math.sin(t * 8) * amp
+            local y = math.abs(math.sin(t * 6)) * (3 + mass * 0.02)
+            local z = math.cos(t * 5) * (amp * 0.6)
+            return Vector3.new(x, y, z)
+        end
+    end
+
     local originalFPDH = workspace.FallenPartsDestroyHeight
     workspace.FallenPartsDestroyHeight = 0/0
     local oldPos = hrp.CFrame
     local targetStartPos = tHrp.Position
     local launched = false
+    local velocityY, angularMag, maxForceY = ChooseFlingParams(localPlayer.Character)
     local bv = Instance.new("BodyVelocity")
-    bv.Velocity = Vector3.new(0, 1000000, 0)
-    bv.MaxForce = Vector3.new(0, math.huge, 0)
+    bv.Velocity = Vector3.new(0, velocityY, 0)
+    bv.MaxForce = Vector3.new(0, maxForceY, 0)
     bv.Parent = hrp
     local bav = Instance.new("BodyAngularVelocity")
-    bav.AngularVelocity = Vector3.new(1000000, 1000000, 1000000)
+    bav.AngularVelocity = Vector3.new(angularMag, angularMag, angularMag)
     bav.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
     bav.Parent = hrp
-    local timeout = tick() + 3
+    local movementFunc = ChooseFlingMovement(localPlayer.Character)
+    local startTime = tick()
+    local timeout = startTime + 3
     while tick() < timeout and not launched do
         if _G.LINUXHUB_UPDATING then break end
         if not target.Parent or tHum.Health <= 0 then break end
-        hrp.CFrame = tHrp.CFrame
+        local offset = Vector3.new(0,0,0)
+        if movementFunc then
+            local ok, off = pcall(function() return movementFunc(startTime) end)
+            if ok and typeof(off) == "Vector3" then
+                offset = off
+            end
+        end
+        hrp.CFrame = tHrp.CFrame * CFrame.new(offset)
         if (tHrp.Position - targetStartPos).Magnitude > 60 or tHrp.Velocity.Magnitude > 180 then
             launched = true
             break
