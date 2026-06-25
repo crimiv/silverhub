@@ -102,6 +102,7 @@ LoadScript("games/mm2/esp.lua")
 LoadScript("games/mm2/combat.lua")
 LoadScript("games/mm2/troll.lua")
 LoadScript("games/mm2/misc.lua")
+LoadScript("games/mm2/teleport.lua")
 LoadScript("games/mm2/settings.lua")
 
 if _G.APPLE_HUB_STATES then
