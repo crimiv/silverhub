@@ -22,7 +22,7 @@ local function IsRoundActive()
     return time > 0
 end
 
-local autoShootEnabled = false
+local autoShootEnabled = AppleHub.Toggles.autoShootEnabled or false
 local AUTO_SHOOT_COOLDOWN = config.cooldowns.autoShoot
 local lastAutoShootTime = 0
 
@@ -124,9 +124,10 @@ CombatTab:Button({
 
 CombatTab:Toggle({
     Title = "Auto Shoot Murderer",
-    Value = false,
+    Value = autoShootEnabled,
     Callback = function(state)
         autoShootEnabled = state
+        AppleHub.Toggles.autoShootEnabled = state
         WindUI:Notify({
             Title = "Auto Shoot",
             Content = autoShootEnabled and "Enabled" or "Disabled",
@@ -191,7 +192,7 @@ CombatTab:Button({
     end
 })
 
-local autoKillAllEnabled = false
+local autoKillAllEnabled = AppleHub.Toggles.autoKillAllEnabled or false
 local AUTO_KILL_ALL_COOLDOWN = config.cooldowns.autoKillAll
 local lastAutoKillAllTime = 0
 
@@ -241,9 +242,10 @@ end)
 
 CombatTab:Toggle({
     Title = "Auto Kill All",
-    Value = false,
+    Value = autoKillAllEnabled,
     Callback = function(state)
         autoKillAllEnabled = state
+        AppleHub.Toggles.autoKillAllEnabled = state
         WindUI:Notify({
             Title = "Auto Kill All",
             Content = autoKillAllEnabled and "Enabled" or "Disabled",
@@ -386,7 +388,7 @@ CombatTab:Button({
     end
 })
 
-local autoGunTPEnabled = false
+local autoGunTPEnabled = AppleHub.Toggles.autoGunTPEnabled or false
 local gunTPTimer = nil
 local gunTPLastCheck = 0
 local currentSheriff = nil
@@ -471,9 +473,10 @@ end
 
 CombatTab:Toggle({
     Title = "Auto TP to Gun",
-    Value = false,
+    Value = autoGunTPEnabled,
     Callback = function(state)
         autoGunTPEnabled = state
+        AppleHub.Toggles.autoGunTPEnabled = state
         WindUI:Notify({
             Title = "Auto TP to Gun",
             Content = autoGunTPEnabled and "Enabled" or "Disabled",
