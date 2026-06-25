@@ -22,6 +22,18 @@ local function IsRoundActive()
     return time > 0
 end
 
+local function IsInLobby()
+    local localPlayer = game.Players.LocalPlayer
+    if not localPlayer then return false end
+    local character = localPlayer.Character
+    if not character then return false end
+    local rootPart = character:FindFirstChild("HumanoidRootPart")
+    if not rootPart then return false end
+    local lobby = workspace:FindFirstChild("RegularLobby")
+    if not lobby then return false end
+    return rootPart:IsDescendantOf(lobby)
+end
+
 local autoShootEnabled = AppleHub.Toggles.autoShootEnabled or false
 local AUTO_SHOOT_COOLDOWN = config.cooldowns.autoShoot
 local lastAutoShootTime = 0
@@ -319,7 +331,14 @@ local isTeleporting = false
 local function TeleportToGunDrop(gunDrop)
     if _G.APPLE_HUB_UPDATING then return end
     if not gunDrop or isTeleporting then return end
-    if not IsPlayerAlive() or not IsRoundActive() then return end
+    if IsInLobby() then
+        WindUI:Notify({ Title = "TP to Gun", Content = "Cannot teleport from lobby", Duration = 2 })
+        return
+    end
+    if not IsPlayerAlive() or not IsRoundActive() then
+        WindUI:Notify({ Title = "TP to Gun", Content = "You are dead or round inactive", Duration = 2 })
+        return
+    end
     local localPlayer = game.Players.LocalPlayer
     if not localPlayer then return end
     local character = localPlayer.Character
@@ -379,6 +398,10 @@ CombatTab:Button({
             WindUI:Notify({ Title = "Error", Content = "Local player not found", Duration = 2 })
             return
         end
+        if IsInLobby() then
+            WindUI:Notify({ Title = "TP to Gun", Content = "Cannot teleport from lobby", Duration = 2 })
+            return
+        end
         if not IsPlayerAlive() or not IsRoundActive() then
             WindUI:Notify({ Title = "TP to Gun", Content = "You are dead or round inactive", Duration = 2 })
             return
@@ -427,6 +450,7 @@ end
 local function TryTeleportToGun()
     if _G.APPLE_HUB_UPDATING then return end
     if not autoGunTPEnabled or isTeleporting then return end
+    if IsInLobby() then return end
     if not IsPlayerAlive() or not IsRoundActive() then return end
     local localPlayer = game.Players.LocalPlayer
     if not localPlayer then return end
