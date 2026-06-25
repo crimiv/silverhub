@@ -9,7 +9,7 @@ local function LoadScript(name)
     assert(loadstring(script))()
 end
 
-local bypassScript = Fetch(BASE_URL .. "shared/adonisbypass.lua")
+local bypassScript = Fetch(BASE_URL .. "shared/adonis_bypass.lua")
 local bypassFn = loadstring(bypassScript)
 if bypassFn then
     bypassFn()
@@ -26,10 +26,15 @@ APPLE_HUB_VERSION = version
 
 local function PerformUpdate(newVersion)
     _G.APPLE_HUB_UPDATING = true
-    if AppleHub and AppleHub.Window then
+    if AppleHub then
         AppleHub.Toggles = AppleHub.Toggles or {}
         _G.APPLE_HUB_STATES = AppleHub.Toggles
-        AppleHub.Window:Close()
+        if AppleHub.Window then
+            AppleHub.Window:Close()
+        end
+        if AppleHub.DisableAll then
+            AppleHub.DisableAll()
+        end
     end
     local WindUI = AppleHub and AppleHub.WindUI
     if WindUI then
@@ -46,12 +51,13 @@ local function PerformUpdate(newVersion)
         })
     end
     task.wait(1)
+    _G.APPLE_HUB_UPDATING = false
     loadstring(game:HttpGet(BASE_URL .. "main.lua"))()
 end
 
 task.spawn(function()
     while true do
-        task.wait(5)
+        task.wait(1)
         if _G.APPLE_HUB_UPDATING then break end
         local success, newVersion = pcall(function()
             local raw = game:HttpGet(BASE_URL .. "version.txt")
