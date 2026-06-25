@@ -280,6 +280,29 @@ MiscTab:Button({
     end
 })
 
+MiscTab:Button({
+    Title = "Rejoin Server",
+    Callback = function()
+        local placeId = game.PlaceId
+        local jobId = game.JobId
+        if not placeId or not jobId then
+            WindUI:Notify({ Title = "Error", Content = "Could not get PlaceId or JobId", Duration = 2 })
+            return
+        end
+        
+        local TeleportService = game:GetService("TeleportService")
+        local success, err = pcall(function()
+            TeleportService:TeleportToPlaceInstance(placeId, jobId, game.Players.LocalPlayer)
+        end)
+        
+        if success then
+            WindUI:Notify({ Title = "Rejoin", Content = "Rejoining server...", Duration = 2 })
+        else
+            WindUI:Notify({ Title = "Error", Content = "Failed to rejoin: " .. tostring(err), Duration = 3 })
+        end
+    end
+})
+
 local antiFlingEnabled = AppleHub.Toggles.antiFlingEnabled or false
 local antiFlingHeartbeat = nil
 

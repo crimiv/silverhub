@@ -35,16 +35,16 @@ AppleHub.WindUI = WindUI
 AppleHub.Utils = utils
 AppleHub.Config = config
 AppleHub.Toggles = AppleHub.Toggles or {}
-AppleHub.SettingsFile = "AppleHub/Settings.json"
+AppleHub.SettingsFile = "LinuxHub/Settings.json"
 
 local function SaveSettings()
     local success, result = pcall(function()
         if not makefolder then return end
-        makefolder("AppleHub")
+        makefolder("LinuxHub")
         if not writefile then return end
         local data = {
             toggles = AppleHub.Toggles,
-            theme = AppleHub.CurrentTheme or "Silver",
+            theme = AppleHub.CurrentTheme or "Linux",
         }
         writefile(AppleHub.SettingsFile, game:GetService("HttpService"):JSONEncode(data))
     end)
@@ -72,14 +72,14 @@ LoadSettings()
 local version = APPLE_HUB_VERSION or "1.0.0"
 
 local Window = WindUI:CreateWindow({
-    Title = "Apple Hub v" .. version .. " (Universal)",
+    Title = "Linux Hub v" .. version .. " (Universal)",
     Author = "by coolio",
-    Folder = "AppleHub",
+    Folder = "LinuxHub",
     Size = UDim2.fromOffset(580, 460),
     MinSize = Vector2.new(560, 350),
     MaxSize = Vector2.new(850, 560),
     Transparent = true,
-    Theme = AppleHub.CurrentTheme or "Silver",
+    Theme = AppleHub.CurrentTheme or "Linux",
     Resizable = true,
     SideBarWidth = 200,
     HideSearchBar = true,
@@ -91,6 +91,10 @@ Window:SetToggleKey(Enum.KeyCode.K)
 AppleHub.Window = Window
 AppleHub.SaveSettings = SaveSettings
 AppleHub.LoadSettings = LoadSettings
+
+if AppleHub.CreateStatusTab then
+    AppleHub.CreateStatusTab(Window)
+end
 
 LoadScript("games/universal/admin.lua")
 LoadScript("games/universal/misc.lua")

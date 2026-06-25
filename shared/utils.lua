@@ -30,4 +30,57 @@ function AppleHub.PlayerHasTool(player, toolName)
     return false
 end
 
+function AppleHub.GetPlatform()
+    if _G.ExecutorFunctionality and _G.ExecutorFunctionality.IsMobile then
+        if _G.ExecutorFunctionality.IsMobile() then
+            return "Mobile"
+        end
+    end
+    return "PC"
+end
+
+function AppleHub.GetExecutor()
+    if getexecutorname then
+        local success, name = pcall(getexecutorname)
+        if success and name then
+            return name
+        end
+    end
+    
+    if syn then return "Synapse X" end
+    if KRNL_LOADED then return "Krnl" end
+    if _G.VEGA then return "Vega X" end
+    if _G.FURK then return "Furk" end
+    if _G.DELTA then return "Delta" end
+    if _G.HADES then return "Hades" end
+    if _G.MIRAI then return "Mirai" end
+    if protosmasher_loader then return "ProtoSmasher" end
+    if exploit then return "Exploit" end
+    if debug.getinfo then return "Roblox Studio" end
+    
+    return "Unknown"
+end
+
+function AppleHub.CreateStatusTab(Window)
+    if not Window then return end
+    
+    local StatusTab = Window:CreateTab({
+        Title = "Status",
+        Icon = "rbxassetid://15898349158"
+    })
+    
+    local platform = AppleHub.GetPlatform()
+    local executor = AppleHub.GetExecutor()
+    
+    StatusTab:Paragraph({
+        Title = "Platform",
+        Content = platform
+    })
+    
+    StatusTab:Paragraph({
+        Title = "Executor",
+        Content = executor
+    })
+end
+
 return AppleHub
