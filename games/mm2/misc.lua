@@ -281,52 +281,14 @@ MiscTab:Button({
 })
 
 local antiFlingEnabled = AppleHub.Toggles.antiFlingEnabled or false
-local autoAntiFlingEnabled = AppleHub.Toggles.autoAntiFlingEnabled or false
 local antiFlingHeartbeat = nil
-local lastFlingDetectTime = 0
-local flingCooldown = 3
-
-local function EnableAntiFling()
-    if not antiFlingEnabled then
-        antiFlingEnabled = true
-        AppleHub.Toggles.antiFlingEnabled = true
-        if AppleHub.SaveSettings then AppleHub.SaveSettings() end
-        WindUI:Notify({
-            Title = "Anti-Fling",
-            Content = "Fling detected! Anti-Fling enabled.",
-            Duration = 3,
-        })
-        SetupAntiFling()
-    end
-end
 
 local function AntiFlingLoop()
+    if not antiFlingEnabled then return end
     local localPlayer = game.Players.LocalPlayer
     if not localPlayer then return end
     local localChar = localPlayer.Character
     if not localChar then return end
-
-    if autoAntiFlingEnabled and not antiFlingEnabled then
-        local detectFling = false
-        local root = localChar:FindFirstChild("HumanoidRootPart")
-        if root then
-            if root.Velocity.Magnitude > 120 then
-                detectFling = true
-            end
-        end
-        for _, child in ipairs(localChar:GetDescendants()) do
-            if child:IsA("BodyVelocity") or child:IsA("BodyAngularVelocity") then
-                detectFling = true
-                break
-            end
-        end
-        if detectFling and tick() - lastFlingDetectTime > flingCooldown then
-            lastFlingDetectTime = tick()
-            EnableAntiFling()
-        end
-    end
-
-    if not antiFlingEnabled then return end
 
     for _, player in ipairs(game.Players:GetPlayers()) do
         if player == localPlayer then continue end
@@ -362,10 +324,10 @@ local function SetupAntiFling()
         antiFlingHeartbeat:Disconnect()
         antiFlingHeartbeat = nil
     end
-    antiFlingHeartbeat = game:GetService("RunService").Heartbeat:Connect(AntiFlingLoop)
+    if antiFlingEnabled then
+        antiFlingHeartbeat = game:GetService("RunService").Heartbeat:Connect(AntiFlingLoop)
+    end
 end
-
-SetupAntiFling()
 
 MiscTab:Toggle({
     Title = "Anti-Fling",
@@ -379,21 +341,7 @@ MiscTab:Toggle({
             Content = antiFlingEnabled and "Enabled" or "Disabled",
             Duration = 2,
         })
-    end
-})
-
-MiscTab:Toggle({
-    Title = "Auto Anti-Fling",
-    Value = autoAntiFlingEnabled,
-    Callback = function(state)
-        autoAntiFlingEnabled = state
-        AppleHub.Toggles.autoAntiFlingEnabled = state
-        if AppleHub.SaveSettings then AppleHub.SaveSettings() end
-        WindUI:Notify({
-            Title = "Auto Anti-Fling",
-            Content = autoAntiFlingEnabled and "Enabled" or "Disabled",
-            Duration = 2,
-        })
+        SetupAntiFling()
     end
 })
 
@@ -403,7 +351,9 @@ game.Players.PlayerRemoving:Connect(CreatePlayerDropdown)
 AppleHub.DisableAll = function()
     antiFlingEnabled = false
     AppleHub.Toggles.antiFlingEnabled = false
-    autoAntiFlingEnabled = false
-    AppleHub.Toggles.autoAntiFlingEnabled = false
     if AppleHub.SaveSettings then AppleHub.SaveSettings() end
+    if antiFlingHeartbeat then
+        antiFlingHeartbeat:Disconnect()
+        antiFlingHeartbeat = nil
+    end
 end
