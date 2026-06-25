@@ -211,108 +211,120 @@ MiscTab:Toggle({
     end
 })
 
-local walkflingEnabled = AppleHub.Toggles.walkflingEnabled or false
-local walkflingPower = AppleHub.Toggles.walkflingPower or 500000
-local walkflingCooldown = 0.5
-local walkflingLastFling = {}
-local walkflingConnections = {}
-local walkflingTouchConn = nil
+local touchFlingEnabled = AppleHub.Toggles.touchFlingEnabled or false
+local touchFlingConnections = {}
+local touchFlingCooldown = {}
+local TOUCH_FLING_COOLDOWN = 1
 
-local function CleanupWalkfling()
-    if walkflingTouchConn then
-        walkflingTouchConn:Disconnect()
-        walkflingTouchConn = nil
-    end
-    for _, conn in ipairs(walkflingConnections) do
+local function CleanupTouchFling()
+    for _, conn in ipairs(touchFlingConnections) do
         pcall(function() conn:Disconnect() end)
     end
-    walkflingConnections = {}
+    touchFlingConnections = {}
+    touchFlingCooldown = {}
 end
 
-local function SetupWalkfling()
-    CleanupWalkfling()
-    if not walkflingEnabled then return end
+local function SetupTouchFling()
+    CleanupTouchFling()
+    if not touchFlingEnabled then return end
+
     local localPlayer = game.Players.LocalPlayer
     if not localPlayer then return end
-    local character = localPlayer.Character
-    if not character then return end
-    local rootPart = character:FindFirstChild("HumanoidRootPart")
-    if not rootPart then return end
 
-    walkflingTouchConn = rootPart.Touched:Connect(function(hit)
-        if not walkflingEnabled then return end
-        local target = game.Players:GetPlayerFromCharacter(hit.Parent)
-        if not target or target == localPlayer then return end
-        local targetRoot = target.Character and target.Character:FindFirstChild("HumanoidRootPart")
-        if not targetRoot then return end
+    local function GetCharacter()
+        return localPlayer.Character
+    end
+
+    local function OnTouch(part, otherPart)
+        if not touchFlingEnabled then return end
+        if not otherPart or not otherPart.Parent then return end
+        local targetPlayer = game.Players:GetPlayerFromCharacter(otherPart.Parent)
+        if not targetPlayer or targetPlayer == localPlayer then return end
+
         local now = tick()
-        if walkflingLastFling[target] and now - walkflingLastFling[target] < walkflingCooldown then return end
-        walkflingLastFling[target] = now
-        local direction = (targetRoot.Position - rootPart.Position).Unit
-        local velocity = direction * walkflingPower + Vector3.new(0, walkflingPower * 0.5, 0)
-        targetRoot.AssemblyLinearVelocity = velocity
-    end)
+        if touchFlingCooldown[targetPlayer] and now - touchFlingCooldown[targetPlayer] < TOUCH_FLING_COOLDOWN then
+            return
+        end
+        touchFlingCooldown[targetPlayer] = now
 
-    local function OnCharacterAddedForWalkfling(char)
-        task.wait(0.1)
-        if walkflingEnabled then
-            SetupWalkfling()
+        local targetRoot = targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if not targetRoot then return end
+
+        local ourRoot = GetCharacter() and GetCharacter():FindFirstChild("HumanoidRootPart")
+        if not ourRoot then return end
+
+        local direction = (targetRoot.Position - ourRoot.Position).Unit
+        local flingVelocity = direction * 1000 + Vector3.new(0, 2000, 0)
+
+        targetRoot.Velocity = flingVelocity
+        targetRoot.RotVelocity = Vector3.new(1000, 1000, 1000)
+        targetRoot.AssemblyLinearVelocity = flingVelocity
+        targetRoot.AssemblyAngularVelocity = Vector3.new(1000, 1000, 1000)
+
+        for _, child in ipairs(targetPlayer.Character:GetChildren()) do
+            if child:IsA("BodyVelocity") or child:IsA("BodyAngularVelocity") or child:IsA("BodyForce") then
+                child:Destroy()
+            end
+        end
+
+        WindUI:Notify({ Title = "Touch Fling", Content = "Flung " .. targetPlayer.Name, Duration = 1 })
+    end
+
+    local function ConnectParts(char)
+        if not char then return end
+        for _, part in ipairs(char:GetDescendants()) do
+            if part:IsA("BasePart") then
+                local conn = part.Touched:Connect(function(otherPart)
+                    pcall(OnTouch, part, otherPart)
+                end)
+                table.insert(touchFlingConnections, conn)
+            end
         end
     end
 
-    local charAddedConn = localPlayer.CharacterAdded:Connect(OnCharacterAddedForWalkfling)
-    table.insert(walkflingConnections, charAddedConn)
+    if GetCharacter() then
+        ConnectParts(GetCharacter())
+    end
+
+    local charAddedConn = localPlayer.CharacterAdded:Connect(function(char)
+        task.wait(0.5)
+        ConnectParts(char)
+    end)
+    table.insert(touchFlingConnections, charAddedConn)
 end
 
-local function ToggleWalkfling(state)
-    walkflingEnabled = state
-    AppleHub.Toggles.walkflingEnabled = state
+local function ToggleTouchFling(state)
+    touchFlingEnabled = state
+    AppleHub.Toggles.touchFlingEnabled = state
     if AppleHub.SaveSettings then AppleHub.SaveSettings() end
     if state then
-        SetupWalkfling()
-        WindUI:Notify({ Title = "Walkfling", Content = "Enabled", Duration = 2 })
+        SetupTouchFling()
+        WindUI:Notify({ Title = "Touch Fling", Content = "Enabled", Duration = 2 })
     else
-        CleanupWalkfling()
-        WindUI:Notify({ Title = "Walkfling", Content = "Disabled", Duration = 2 })
+        CleanupTouchFling()
+        WindUI:Notify({ Title = "Touch Fling", Content = "Disabled", Duration = 2 })
     end
 end
 
 MiscTab:Toggle({
-    Title = "Walkfling",
-    Value = walkflingEnabled,
+    Title = "Touch Fling",
+    Value = touchFlingEnabled,
     Callback = function(state)
-        ToggleWalkfling(state)
+        ToggleTouchFling(state)
     end
 })
 
-MiscTab:Slider({
-    Title = "Walkfling Power",
-    Desc = "Velocity applied to players you touch",
-    Min = 1000,
-    Max = 1000000,
-    Default = walkflingPower,
-    Callback = function(value)
-        walkflingPower = value
-        AppleHub.Toggles.walkflingPower = value
-        if AppleHub.SaveSettings then AppleHub.SaveSettings() end
-    end
-})
-
-local originalDisableAll = AppleHub.DisableAll
 AppleHub.DisableAll = function()
-    if walkflingEnabled then
-        walkflingEnabled = false
-        AppleHub.Toggles.walkflingEnabled = false
-        if AppleHub.SaveSettings then AppleHub.SaveSettings() end
-        CleanupWalkfling()
-    end
     if antiFlingEnabled then
         antiFlingEnabled = false
         AppleHub.Toggles.antiFlingEnabled = false
         if AppleHub.SaveSettings then AppleHub.SaveSettings() end
         CleanupAntiFling()
     end
-    if originalDisableAll then
-        originalDisableAll()
+    if touchFlingEnabled then
+        touchFlingEnabled = false
+        AppleHub.Toggles.touchFlingEnabled = false
+        if AppleHub.SaveSettings then AppleHub.SaveSettings() end
+        CleanupTouchFling()
     end
 end
