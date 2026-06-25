@@ -17,10 +17,10 @@ SilverHub.Utils = utils
 SilverHub.Config = config
 
 local Window = WindUI:CreateWindow({
-    Title = "Silver Hub",
+    Title = "Apple Hub",
     Author = "by coolio",
     Folder = "SilverHub",
-    Icon = "https://i.imgur.com/sEPYnKP.png",
+    Icon = "https://i.imgur.com/5xBDtDy.png",
     Size = UDim2.fromOffset(580, 460),
     MinSize = Vector2.new(560, 350),
     MaxSize = Vector2.new(850, 560),
