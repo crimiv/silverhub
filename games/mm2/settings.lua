@@ -1,95 +1,55 @@
 local WindUI = AppleHub.WindUI
-local utils = AppleHub.Utils
+local config = AppleHub.Config
 
-local MiscTab = AppleHub.Window:Tab({ Title = "Misc" })
+local SettingsTab = AppleHub.Window:Tab({ Title = "Settings" })
 
-local selectedPlayerName = nil
-local playerDropdown = nil
+local themes = config.themes or {"Silver", "Dark", "Light", "Neon"}
+local currentTheme = "Silver"
 
-local function GetPlayerNames()
-    local names = {}
-    local localPlayer = game.Players.LocalPlayer
-    for _, player in ipairs(game.Players:GetPlayers()) do
-        if player ~= localPlayer then
-            table.insert(names, player.Name)
-        end
-    end
-    return names
-end
-
-local function CreatePlayerDropdown()
-    if playerDropdown then
-        playerDropdown:Destroy()
-        playerDropdown = nil
-    end
-    local playerNames = GetPlayerNames()
-    if #playerNames == 0 then
-        playerNames = {"No other players"}
-        selectedPlayerName = nil
-    else
-        selectedPlayerName = playerNames[1]
-    end
-    playerDropdown = MiscTab:Dropdown({
-        Title = "Select Player",
-        Values = playerNames,
-        Default = playerNames[1] or "No other players",
-        Callback = function(value)
-            selectedPlayerName = value
-        end
-    })
-end
-
-CreatePlayerDropdown()
-
-MiscTab:Button({
-    Title = "Refresh Players",
-    Callback = function()
-        CreatePlayerDropdown()
-        WindUI:Notify({ Title = "Misc", Content = "Player list refreshed", Duration = 2 })
+SettingsTab:Dropdown({
+    Title = "Theme",
+    Values = themes,
+    Default = currentTheme,
+    Callback = function(value)
+        currentTheme = value
+        WindUI:SetTheme(value)
+        WindUI:Notify({ Title = "Theme", Content = "Switched to " .. value, Duration = 2 })
     end
 })
 
-MiscTab:Button({
-    Title = "Teleport to Selected Player",
+SettingsTab:Button({
+    Title = "Check for Updates",
     Callback = function()
-        local localPlayer = game.Players.LocalPlayer
-        if not localPlayer then
-            WindUI:Notify({ Title = "Error", Content = "Local player not found", Duration = 2 })
-            return
+        local BASE_URL = "https://raw.githubusercontent.com/crimiv/applehub/main/"
+        local success, remoteConfig = pcall(function()
+            return game:HttpGet(BASE_URL .. "shared/config.lua")
+        end)
+        if success then
+            local fn, err = loadstring(remoteConfig)
+            if fn then
+                local remote = fn()
+                if remote and remote.version then
+                    if remote.version ~= config.version then
+                        WindUI:Notify({
+                            Title = "Update Available",
+                            Content = "New version " .. remote.version .. " is available. Please reload the hub.",
+                            Duration = 5,
+                        })
+                    else
+                        WindUI:Notify({
+                            Title = "No Updates",
+                            Content = "You are on the latest version.",
+                            Duration = 3,
+                        })
+                    end
+                end
+            end
+        else
+            WindUI:Notify({
+                Title = "Error",
+                Content = "Failed to check for updates.",
+                Duration = 3,
+            })
         end
-        if not selectedPlayerName or selectedPlayerName == "No other players" then
-            WindUI:Notify({ Title = "Error", Content = "No valid player selected", Duration = 2 })
-            return
-        end
-        local targetPlayer = game.Players:FindFirstChild(selectedPlayerName)
-        if not targetPlayer then
-            WindUI:Notify({ Title = "Error", Content = "Selected player not found", Duration = 2 })
-            return
-        end
-        local targetCharacter = targetPlayer.Character
-        if not targetCharacter then
-            WindUI:Notify({ Title = "Error", Content = "Selected player has no character", Duration = 2 })
-            return
-        end
-        local targetRoot = targetCharacter:FindFirstChild("HumanoidRootPart")
-        if not targetRoot then
-            WindUI:Notify({ Title = "Error", Content = "Selected player has no HumanoidRootPart", Duration = 2 })
-            return
-        end
-        local localCharacter = localPlayer.Character
-        if not localCharacter then
-            WindUI:Notify({ Title = "Error", Content = "Your character not found", Duration = 2 })
-            return
-        end
-        local localRoot = localCharacter:FindFirstChild("HumanoidRootPart")
-        if not localRoot then
-            WindUI:Notify({ Title = "Error", Content = "Your HumanoidRootPart not found", Duration = 2 })
-            return
-        end
-        localRoot.CFrame = targetRoot.CFrame
-        WindUI:Notify({ Title = "Misc", Content = "Teleported to " .. targetPlayer.Name, Duration = 2 })
     end
 })
-
-game.Players.PlayerAdded:Connect(CreatePlayerDropdown)
-game.Players.PlayerRemoving:Connect(CreatePlayerDropdown)
