@@ -20,6 +20,7 @@ local Window = WindUI:CreateWindow({
     Title = "Silver Hub",
     Author = "by coolio",
     Folder = "SilverHub",
+    Icon = "https://i.imgur.com/sEPYnKP.png",
     Size = UDim2.fromOffset(580, 460),
     MinSize = Vector2.new(560, 350),
     MaxSize = Vector2.new(850, 560),
