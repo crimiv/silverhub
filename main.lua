@@ -10,12 +10,9 @@ local function LoadScript(name)
 end
 
 local bypassScript = Fetch(BASE_URL .. "shared/adonisbypass.lua")
-local bypassFn, err = loadstring(bypassScript)
+local bypassFn = loadstring(bypassScript)
 if bypassFn then
-    local bypass = bypassFn()
-    if bypass and bypass.loaded then
-    end
-else
+    bypassFn()
 end
 
 local gamesList = Fetch(BASE_URL .. "games.lua")
