@@ -16,8 +16,10 @@ SilverHub.WindUI = WindUI
 SilverHub.Utils = utils
 SilverHub.Config = config
 
+local version = config.version or "1.0.0"
+
 local Window = WindUI:CreateWindow({
-    Title = "Apple Hub",
+    Title = "Apple Hub v" .. version,
     Author = "by coolio",
     Folder = "SilverHub",
     Icon = "https://raw.githubusercontent.com/crimiv/applehub/refs/heads/main/icon/applehub.png",
@@ -39,7 +41,27 @@ local Window = WindUI:CreateWindow({
 
 SilverHub.Window = Window
 
+task.spawn(function()
+    local success, remoteConfig = pcall(function()
+        return game:HttpGet(BASE_URL .. "shared/config.lua")
+    end)
+    if success then
+        local fn, err = loadstring(remoteConfig)
+        if fn then
+            local remote = fn()
+            if remote and remote.version and remote.version ~= version then
+                WindUI:Notify({
+                    Title = "Update Available",
+                    Content = "New version " .. remote.version .. " is available. Please reload the hub.",
+                    Duration = 5,
+                })
+            end
+        end
+    end
+end)
+
 LoadScript("games/mm2/esp.lua")
 LoadScript("games/mm2/combat.lua")
 LoadScript("games/mm2/troll.lua")
 LoadScript("games/mm2/misc.lua")
+LoadScript("games/mm2/settings.lua")
