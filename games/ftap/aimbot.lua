@@ -20,6 +20,10 @@ local camera = Workspace.CurrentCamera
 local targetPosition = nil
 
 local function updateTarget()
+    if _G.APPLE_HUB_UPDATING then
+        targetPosition = nil
+        return
+    end
     if not Config.Enabled then
         targetPosition = nil
         return
@@ -74,6 +78,7 @@ local function updateTarget()
 end
 
 local oldNamecall = hookmetamethod(game, "__namecall", newcclosure(function(self, ...)
+    if _G.APPLE_HUB_UPDATING then return oldNamecall(self, ...) end
     local method = getnamecallmethod()
     if Config.Enabled and targetPosition and self == Workspace and method == "Raycast" then
         local args = { ... }
@@ -102,3 +107,9 @@ CombatTab:Toggle({
         })
     end
 })
+
+AppleHub.DisableAll = function()
+    Config.Enabled = false
+    AppleHub.Toggles.silentAimEnabled = false
+    targetPosition = nil
+end
