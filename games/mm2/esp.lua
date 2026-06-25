@@ -128,7 +128,7 @@ game:GetService("RunService").Heartbeat:Connect(function()
 end)
 
 VisualTab:Toggle({
-    Title = "Highlight Players",
+    Title = "ESP Highlight",
     Value = espEnabled,
     Callback = function(state)
         espEnabled = state
