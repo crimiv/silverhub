@@ -98,6 +98,7 @@ end
 
 LoadScript("games/gs/combat.lua")
 LoadScript("games/gs/autofarm.lua")
+LoadScript("games/gs/misc.lua")
 
 if _G.LINUXHUB_STATES then
     for key, value in pairs(_G.LINUXHUB_STATES) do
