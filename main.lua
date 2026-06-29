@@ -74,7 +74,7 @@ local gamesList = Fetch(BASE_URL .. "games.lua")
 local games = assert(loadstring(gamesList))()
 
 local placeId = game.PlaceId or game.GameId
-local gameEntry = games[placeId]
+local gameScript = games[game.PlaceId] or games.fallback
 if not gameEntry then
     LoadScript("games/universal/init.lua")
     return
