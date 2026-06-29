@@ -2,7 +2,6 @@ local Workspace = game:GetService("Workspace")
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local LocalPlayer = Players.LocalPlayer
-
 local WindUI = LinuxHub.WindUI
 local utils = LinuxHub.Utils
 local config = LinuxHub.Config
@@ -48,8 +47,8 @@ local function refreshPairs()
             end
         end
     end
-    table.sort(balls, function(a,b) return a.Name < b.Name end)
-    table.sort(goals, function(a,b) return a.Name < b.Name end)
+    table.sort(balls, function(a, b) return a.Name < b.Name end)
+    table.sort(goals, function(a, b) return a.Name < b.Name end)
     local pairs = {}
     local count = math.min(#balls, #goals)
     for i = 1, count do
@@ -66,16 +65,11 @@ local function RideAndScore(ball, goalPos)
     if not rootPart then return false end
     local ballPos = getPosition(ball)
     if not ballPos then return false end
-
-    if (ballPos - goalPos).Magnitude < 2 then
-        return true
-    end
-
+    if (ballPos - goalPos).Magnitude < 2 then return true end
     local tweenInfo1 = TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
     local tween1 = TweenService:Create(rootPart, tweenInfo1, { CFrame = CFrame.new(ballPos) })
     tween1:Play()
     tween1.Completed:Wait()
-
     local tweenInfo2 = TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
     if ball:IsA("BasePart") then
         local tweenBall = TweenService:Create(ball, tweenInfo2, { CFrame = CFrame.new(goalPos) })
@@ -136,16 +130,13 @@ local function startAutoFarm()
     autoFarmEnabled = true
     LinuxHub.Toggles.autoFarmEnabled = true
     if LinuxHub.SaveSettings then LinuxHub.SaveSettings() end
-
     pcall(ScoreAll)
-
     loopTask = task.spawn(function()
         while isRunning do
             pcall(ScoreAll)
             task.wait(1)
         end
     end)
-
     if beachballs then
         childAddedConn = beachballs.ChildAdded:Connect(function(child)
             if isRunning and string.find(string.lower(child.Name), "ball") then
@@ -153,7 +144,6 @@ local function startAutoFarm()
             end
         end)
     end
-
     WindUI:Notify({ Title = "Auto Farm", Content = "Enabled", Duration = 2 })
 end
 
@@ -161,14 +151,8 @@ local function stopAutoFarm()
     isRunning = false
     autoFarmEnabled = false
     LinuxHub.Toggles.autoFarmEnabled = false
-    if loopTask then
-        task.cancel(loopTask)
-        loopTask = nil
-    end
-    if childAddedConn then
-        childAddedConn:Disconnect()
-        childAddedConn = nil
-    end
+    if loopTask then task.cancel(loopTask); loopTask = nil end
+    if childAddedConn then childAddedConn:Disconnect(); childAddedConn = nil end
     if LinuxHub.SaveSettings then LinuxHub.SaveSettings() end
     WindUI:Notify({ Title = "Auto Farm", Content = "Disabled", Duration = 2 })
 end
@@ -177,11 +161,67 @@ FarmTab:Toggle({
     Title = "Auto Score Balls",
     Value = autoFarmEnabled,
     Callback = function(state)
-        if state then
-            startAutoFarm()
-        else
-            stopAutoFarm()
+        if state then startAutoFarm() else stopAutoFarm() end
+    end
+})
+
+local teleportToDemonKingEnabled = LinuxHub.Toggles.teleportToDemonKingEnabled or false
+local demonKingLoopTask = nil
+local isTeleporting = false
+
+local function getDemonKingPosition()
+    local npc = Workspace:FindFirstChild("NPC")
+    if not npc then return nil end
+    local demonKing = npc:FindFirstChild("DemonKing")
+    if not demonKing then return nil end
+    local demonKingModel = demonKing:FindFirstChild("DemonKing")
+    if demonKingModel then
+        return getPosition(demonKingModel)
+    end
+    return getPosition(demonKing)
+end
+
+local function teleportToDemonKing()
+    local character = LocalPlayer.Character
+    if not character then return end
+    local rootPart = character:FindFirstChild("HumanoidRootPart")
+    if not rootPart then return end
+    local targetPos = getDemonKingPosition()
+    if not targetPos then
+        return
+    end
+    rootPart.CFrame = CFrame.new(targetPos)
+end
+
+local function startTeleportToDemonKing()
+    if isTeleporting then return end
+    isTeleporting = true
+    teleportToDemonKingEnabled = true
+    LinuxHub.Toggles.teleportToDemonKingEnabled = true
+    if LinuxHub.SaveSettings then LinuxHub.SaveSettings() end
+    demonKingLoopTask = task.spawn(function()
+        while isTeleporting do
+            pcall(teleportToDemonKing)
+            task.wait(0.1) 
         end
+    end)
+    WindUI:Notify({ Title = "Teleport to Demon King", Content = "Enabled", Duration = 2 })
+end
+
+local function stopTeleportToDemonKing()
+    isTeleporting = false
+    teleportToDemonKingEnabled = false
+    LinuxHub.Toggles.teleportToDemonKingEnabled = false
+    if demonKingLoopTask then task.cancel(demonKingLoopTask); demonKingLoopTask = nil end
+    if LinuxHub.SaveSettings then LinuxHub.SaveSettings() end
+    WindUI:Notify({ Title = "Teleport to Demon King", Content = "Disabled", Duration = 2 })
+end
+
+FarmTab:Toggle({
+    Title = "Teleport to Demon King",
+    Value = teleportToDemonKingEnabled,
+    Callback = function(state)
+        if state then startTeleportToDemonKing() else stopTeleportToDemonKing() end
     end
 })
 
@@ -189,5 +229,6 @@ LinuxHub.DisableAll = LinuxHub.DisableAll or function() end
 local oldDisable = LinuxHub.DisableAll
 LinuxHub.DisableAll = function()
     stopAutoFarm()
+    stopTeleportToDemonKing()
     oldDisable()
 end
