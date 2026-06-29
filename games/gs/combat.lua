@@ -11,7 +11,7 @@ local AnimComplete = AeroServices:WaitForChild("WeaponAnimComplete")
 
 local autoSwingEnabled = LinuxHub.Toggles.AutoSwing or false
 local lastSwingTime = 0
-local SWING_COOLDOWN = 0.01
+local SWING_COOLDOWN = 0.1
 
 local function SwingWeapon()
     AttackStart:FireServer()
