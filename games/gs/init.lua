@@ -71,6 +71,14 @@ LoadSettings()
 
 local version = BANDITHUB_VERSION or "1.0.0"
 
+if BanditHub.Window then
+    pcall(function() BanditHub.Window:Close() end)
+    BanditHub.Window = nil
+end
+
+-- Small delay to reduce Window/UI object conflicts during hot reloads.
+task.wait()
+
 local Window = WindUI:CreateWindow({
     Title = "Bandit Hub v" .. version,
     Author = "by coolio",

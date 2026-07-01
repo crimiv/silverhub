@@ -70,6 +70,11 @@ LoadSettings()
 
 local version = BANDITHUB_VERSION or "1.0.0"
 
+if BanditHub.Window then
+    pcall(function() BanditHub.Window:Close() end)
+    BanditHub.Window = nil
+end
+
 local Window = WindUI:CreateWindow({
     Title = "Bandit Hub v" .. version,
     Author = "by coolio",
