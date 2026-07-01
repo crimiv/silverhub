@@ -344,6 +344,36 @@ local function GetAllGunDrops()
     return gunDrops
 end
 
+local function IsMurdererCampingGunDrop(gd)
+    -- Heuristic: murderer is considered "camping" if they are very close to the GunDrop.
+    -- This prevents us from TP-ing into a gun while the murderer is already positioned there.
+    local murderer = BanditHub.GetCurrentMurderer()
+    if not murderer or not murderer.Character then return false end
+    local mRoot = murderer.Character:FindFirstChild("HumanoidRootPart")
+    if not mRoot then return false end
+
+    local gdPos
+    if gd:IsA("BasePart") then
+        gdPos = gd.Position
+    elseif gd:IsA("Model") then
+        local primary = gd.PrimaryPart
+        if primary then
+            gdPos = primary.Position
+        else
+            for _, part in ipairs(gd:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    gdPos = part.Position
+                    break
+                end
+            end
+        end
+    end
+    if not gdPos then return false end
+
+    local CAMP_DIST = 6
+    return (mRoot.Position - gdPos).Magnitude <= CAMP_DIST
+end
+
 local function GetClosestGunDrop()
     local localPlayer = game.Players.LocalPlayer
     if not localPlayer then return nil end
@@ -374,15 +404,19 @@ local function GetClosestGunDrop()
             end
         end
         if gdPos then
-            local dist = (pos - gdPos).Magnitude
-            if dist < closestDist then
-                closestDist = dist
-                closest = gd
+            -- If murderer is camping this gun, skip it.
+            if not IsMurdererCampingGunDrop(gd) then
+                local dist = (pos - gdPos).Magnitude
+                if dist < closestDist then
+                    closestDist = dist
+                    closest = gd
+                end
             end
         end
     end
     return closest
 end
+
 
 local isTeleporting = false
 
