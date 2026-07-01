@@ -1,8 +1,8 @@
-local WindUI = LinuxHub.WindUI
-local utils = LinuxHub.Utils
-local config = LinuxHub.Config
+local WindUI = BanditHub.WindUI
+local utils = BanditHub.Utils
+local config = BanditHub.Config
 
-local CombatTab = LinuxHub.Window:Tab({ Title = "Combat" })
+local CombatTab = BanditHub.Window:Tab({ Title = "Combat" })
 
 local roundTimer = workspace:FindFirstChild("RoundTimerPart")
 
@@ -34,7 +34,7 @@ local function IsInLobby()
     return rootPart:IsDescendantOf(lobby)
 end
 
-local autoShootEnabled = LinuxHub.Toggles.autoShootEnabled or false
+local autoShootEnabled = BanditHub.Toggles.autoShootEnabled or false
 local AUTO_SHOOT_COOLDOWN = config.cooldowns.autoShoot
 local lastAutoShootTime = 0
 
@@ -45,7 +45,7 @@ local function ShootAtMurderer(silent)
         if not silent then WindUI:Notify({ Title = "Error", Content = "Local player not found", Duration = 2 }) end
         return
     end
-    local murderer = LinuxHub.GetCurrentMurderer()
+    local murderer = BanditHub.GetCurrentMurderer()
     if not murderer then
         if not silent then WindUI:Notify({ Title = "Error", Content = "No murderer found", Duration = 2 }) end
         return
@@ -141,8 +141,8 @@ CombatTab:Toggle({
     Value = autoShootEnabled,
     Callback = function(state)
         autoShootEnabled = state
-        LinuxHub.Toggles.autoShootEnabled = state
-        if LinuxHub.SaveSettings then LinuxHub.SaveSettings() end
+        BanditHub.Toggles.autoShootEnabled = state
+        if BanditHub.SaveSettings then BanditHub.SaveSettings() end
         WindUI:Notify({
             Title = "Auto Shoot",
             Content = autoShootEnabled and "Enabled" or "Disabled",
@@ -244,7 +244,7 @@ CombatTab:Button({
             WindUI:Notify({ Title = "Error", Content = "HandleTouched remote not found", Duration = 2 })
             return
         end
-        local sheriff = LinuxHub.GetCurrentSheriff()
+        local sheriff = BanditHub.GetCurrentSheriff()
         local killed = 0
         for _, player in pairs(game.Players:GetPlayers()) do
             if player == localPlayer then continue end
@@ -262,11 +262,11 @@ CombatTab:Button({
         else
             WindUI:Notify({ Title = "Kill All Except Sheriff", Content = "No valid players to kill", Duration = 2 })
         end
-        if LinuxHub.SaveSettings then LinuxHub.SaveSettings() end
+        if BanditHub.SaveSettings then BanditHub.SaveSettings() end
     end
 })
 
-local autoKillAllEnabled = LinuxHub.Toggles.autoKillAllEnabled or false
+local autoKillAllEnabled = BanditHub.Toggles.autoKillAllEnabled or false
 local AUTO_KILL_ALL_COOLDOWN = config.cooldowns.autoKillAll
 local lastAutoKillAllTime = 0
 
@@ -321,8 +321,8 @@ CombatTab:Toggle({
     Value = autoKillAllEnabled,
     Callback = function(state)
         autoKillAllEnabled = state
-        LinuxHub.Toggles.autoKillAllEnabled = state
-        if LinuxHub.SaveSettings then LinuxHub.SaveSettings() end
+        BanditHub.Toggles.autoKillAllEnabled = state
+        if BanditHub.SaveSettings then BanditHub.SaveSettings() end
         WindUI:Notify({
             Title = "Auto Kill All",
             Content = autoKillAllEnabled and "Enabled" or "Disabled",
@@ -478,7 +478,7 @@ CombatTab:Button({
     end
 })
 
-local autoGunTPEnabled = LinuxHub.Toggles.autoGunTPEnabled or false
+local autoGunTPEnabled = BanditHub.Toggles.autoGunTPEnabled or false
 local gunTPTimer = nil
 local gunTPLastCheck = 0
 local currentSheriff = nil
@@ -542,7 +542,7 @@ local function SetupAutoGunTP()
         end)
     end
     currentSheriff = nil
-    for player, role in pairs(LinuxHub.playerRoles) do
+    for player, role in pairs(BanditHub.playerRoles) do
         if role == "sheriff" then
             currentSheriff = player
             break
@@ -572,8 +572,8 @@ CombatTab:Toggle({
     Value = autoGunTPEnabled,
     Callback = function(state)
         autoGunTPEnabled = state
-        LinuxHub.Toggles.autoGunTPEnabled = state
-        if LinuxHub.SaveSettings then LinuxHub.SaveSettings() end
+        BanditHub.Toggles.autoGunTPEnabled = state
+        if BanditHub.SaveSettings then BanditHub.SaveSettings() end
         WindUI:Notify({
             Title = "Auto TP to Gun",
             Content = autoGunTPEnabled and "Enabled" or "Disabled",
@@ -587,13 +587,13 @@ CombatTab:Toggle({
     end
 })
 
-LinuxHub.DisableAll = function()
+BanditHub.DisableAll = function()
     autoShootEnabled = false
-    LinuxHub.Toggles.autoShootEnabled = false
+    BanditHub.Toggles.autoShootEnabled = false
     autoKillAllEnabled = false
-    LinuxHub.Toggles.autoKillAllEnabled = false
+    BanditHub.Toggles.autoKillAllEnabled = false
     autoGunTPEnabled = false
-    LinuxHub.Toggles.autoGunTPEnabled = false
-    if LinuxHub.SaveSettings then LinuxHub.SaveSettings() end
+    BanditHub.Toggles.autoGunTPEnabled = false
+    if BanditHub.SaveSettings then BanditHub.SaveSettings() end
     CleanupAutoGunTP()
 end

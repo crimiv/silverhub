@@ -1,6 +1,6 @@
-local LinuxHub = {}
+local BanditHub = {}
 
-function LinuxHub.GetPlayerFromArg(arg)
+function BanditHub.GetPlayerFromArg(arg)
     if typeof(arg) == "Instance" and arg:IsA("Player") then
         return arg
     elseif type(arg) == "string" then
@@ -9,7 +9,7 @@ function LinuxHub.GetPlayerFromArg(arg)
     return nil
 end
 
-function LinuxHub.PlayerHasTool(player, toolName)
+function BanditHub.PlayerHasTool(player, toolName)
     if not player then return false end
     local backpack = player:FindFirstChild("Backpack")
     if backpack then
@@ -30,7 +30,7 @@ function LinuxHub.PlayerHasTool(player, toolName)
     return false
 end
 
-function LinuxHub.GetPlatform()
+function BanditHub.GetPlatform()
     if _G.ExecutorFunctionality and _G.ExecutorFunctionality.IsMobile then
         if _G.ExecutorFunctionality.IsMobile() then
             return "Mobile"
@@ -39,7 +39,7 @@ function LinuxHub.GetPlatform()
     return "PC"
 end
 
-function LinuxHub.GetExecutor()
+function BanditHub.GetExecutor()
     if getexecutorname then
         local success, name = pcall(getexecutorname)
         if success and name then
@@ -61,7 +61,7 @@ function LinuxHub.GetExecutor()
     return "Unknown"
 end
 
-function LinuxHub.CreateStatusTab(Window)
+function BanditHub.CreateStatusTab(Window)
     if not Window then return end
     
     local StatusTab = Window:CreateTab({
@@ -69,8 +69,8 @@ function LinuxHub.CreateStatusTab(Window)
         Icon = "rbxassetid://15898349158"
     })
     
-    local platform = LinuxHub.GetPlatform()
-    local executor = LinuxHub.GetExecutor()
+    local platform = BanditHub.GetPlatform()
+    local executor = BanditHub.GetExecutor()
     
     StatusTab:Paragraph({
         Title = "Platform",
@@ -83,4 +83,4 @@ function LinuxHub.CreateStatusTab(Window)
     })
 end
 
-return LinuxHub
+return BanditHub

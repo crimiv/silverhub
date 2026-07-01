@@ -1,6 +1,6 @@
-local WindUI = LinuxHub.WindUI
+local WindUI = BanditHub.WindUI
 
-local TeleportTab = LinuxHub.Window:Tab({ Title = "Teleport" })
+local TeleportTab = BanditHub.Window:Tab({ Title = "Teleport" })
 
 local function TeleportToLobby()
     local localPlayer = game.Players.LocalPlayer

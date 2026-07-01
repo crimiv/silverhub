@@ -1,10 +1,10 @@
-local WindUI = LinuxHub.WindUI
-local config = LinuxHub.Config
+local WindUI = BanditHub.WindUI
+local config = BanditHub.Config
 
-local SettingsTab = LinuxHub.Window:Tab({ Title = "Settings" })
+local SettingsTab = BanditHub.Window:Tab({ Title = "Settings" })
 
 local themes = config.themes or {"Silver", "Dark", "Light", "Neon"}
-local currentTheme = LinuxHub.CurrentTheme or "Silver"
+local currentTheme = BanditHub.CurrentTheme or "Silver"
 
 SettingsTab:Dropdown({
     Title = "Theme",
@@ -12,9 +12,9 @@ SettingsTab:Dropdown({
     Default = currentTheme,
     Callback = function(value)
         currentTheme = value
-        LinuxHub.CurrentTheme = value
+        BanditHub.CurrentTheme = value
         WindUI:SetTheme(value)
-        if LinuxHub.SaveSettings then LinuxHub.SaveSettings() end
+        if BanditHub.SaveSettings then BanditHub.SaveSettings() end
         WindUI:Notify({ Title = "Theme", Content = "Switched to " .. value, Duration = 2 })
     end
 })

@@ -1,7 +1,7 @@
-local WindUI = LinuxHub.WindUI
-local utils = LinuxHub.Utils
+local WindUI = BanditHub.WindUI
+local utils = BanditHub.Utils
 
-local MiscTab = LinuxHub.Window:Tab({ Title = "Misc" })
+local MiscTab = BanditHub.Window:Tab({ Title = "Misc" })
 
 local selectedPlayerName = nil
 local playerDropdown = nil
@@ -98,7 +98,7 @@ end
 MiscTab:Button({
     Title = "Expose Murderer",
     Callback = function()
-        local murderer = LinuxHub.GetCurrentMurderer()
+        local murderer = BanditHub.GetCurrentMurderer()
         if murderer then
             SendChatMessage("Murderer is " .. murderer.Name)
             WindUI:Notify({ Title = "Expose", Content = "Murderer exposed in chat", Duration = 2 })
@@ -111,7 +111,7 @@ MiscTab:Button({
 MiscTab:Button({
     Title = "Expose Sheriff",
     Callback = function()
-        local sheriff = LinuxHub.GetCurrentSheriff()
+        local sheriff = BanditHub.GetCurrentSheriff()
         if sheriff then
             SendChatMessage("Sheriff is " .. sheriff.Name)
             WindUI:Notify({ Title = "Expose", Content = "Sheriff exposed in chat", Duration = 2 })
@@ -129,7 +129,7 @@ MiscTab:Button({
             WindUI:Notify({ Title = "Error", Content = "Local player not found", Duration = 2 })
             return
         end
-        local murderer = LinuxHub.GetCurrentMurderer()
+        local murderer = BanditHub.GetCurrentMurderer()
         if not murderer then
             WindUI:Notify({ Title = "Error", Content = "No murderer found", Duration = 2 })
             return
@@ -167,7 +167,7 @@ MiscTab:Button({
             WindUI:Notify({ Title = "Error", Content = "Local player not found", Duration = 2 })
             return
         end
-        local sheriff = LinuxHub.GetCurrentSheriff()
+        local sheriff = BanditHub.GetCurrentSheriff()
         if not sheriff then
             WindUI:Notify({ Title = "Error", Content = "No sheriff found", Duration = 2 })
             return
@@ -303,7 +303,7 @@ MiscTab:Button({
     end
 })
 
-local antiFlingEnabled = LinuxHub.Toggles.antiFlingEnabled or false
+local antiFlingEnabled = BanditHub.Toggles.antiFlingEnabled or false
 local antiFlingHeartbeat = nil
 
 local function AntiFlingLoop()
@@ -357,8 +357,8 @@ MiscTab:Toggle({
     Value = antiFlingEnabled,
     Callback = function(state)
         antiFlingEnabled = state
-        LinuxHub.Toggles.antiFlingEnabled = state
-        if LinuxHub.SaveSettings then LinuxHub.SaveSettings() end
+        BanditHub.Toggles.antiFlingEnabled = state
+        if BanditHub.SaveSettings then BanditHub.SaveSettings() end
         WindUI:Notify({
             Title = "Anti-Fling",
             Content = antiFlingEnabled and "Enabled" or "Disabled",
@@ -371,10 +371,10 @@ MiscTab:Toggle({
 game.Players.PlayerAdded:Connect(CreatePlayerDropdown)
 game.Players.PlayerRemoving:Connect(CreatePlayerDropdown)
 
-LinuxHub.DisableAll = function()
+BanditHub.DisableAll = function()
     antiFlingEnabled = false
-    LinuxHub.Toggles.antiFlingEnabled = false
-    if LinuxHub.SaveSettings then LinuxHub.SaveSettings() end
+    BanditHub.Toggles.antiFlingEnabled = false
+    if BanditHub.SaveSettings then BanditHub.SaveSettings() end
     if antiFlingHeartbeat then
         antiFlingHeartbeat:Disconnect()
         antiFlingHeartbeat = nil

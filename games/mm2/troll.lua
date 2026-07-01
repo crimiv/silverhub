@@ -1,8 +1,8 @@
-local WindUI = LinuxHub.WindUI
-local utils = LinuxHub.Utils
-local config = LinuxHub.Config
+local WindUI = BanditHub.WindUI
+local utils = BanditHub.Utils
+local config = BanditHub.Config
 
-local TrollTab = LinuxHub.Window:Tab({ Title = "Troll" })
+local TrollTab = BanditHub.Window:Tab({ Title = "Troll" })
 
 local function IsSeated(player)
     local char = player.Character
@@ -71,7 +71,7 @@ TrollTab:Button({
     Title = "Fling Murderer",
     Callback = function()
         if _G.LINUXHUB_UPDATING then return end
-        local murderer = LinuxHub.GetCurrentMurderer()
+        local murderer = BanditHub.GetCurrentMurderer()
         if murderer then
             FlingPlayer(murderer, false)
         else
@@ -84,7 +84,7 @@ TrollTab:Button({
     Title = "Fling Sheriff",
     Callback = function()
         if _G.LINUXHUB_UPDATING then return end
-        local sheriff = LinuxHub.GetCurrentSheriff()
+        local sheriff = BanditHub.GetCurrentSheriff()
         if sheriff then
             FlingPlayer(sheriff, false)
         else
@@ -93,8 +93,8 @@ TrollTab:Button({
     end
 })
 
-local autoFlingMurdererEnabled = LinuxHub.Toggles.autoFlingMurdererEnabled or false
-local autoFlingSheriffEnabled = LinuxHub.Toggles.autoFlingSheriffEnabled or false
+local autoFlingMurdererEnabled = BanditHub.Toggles.autoFlingMurdererEnabled or false
+local autoFlingSheriffEnabled = BanditHub.Toggles.autoFlingSheriffEnabled or false
 local autoFlingMurdererCoroutine = nil
 local autoFlingSheriffCoroutine = nil
 
@@ -103,8 +103,8 @@ TrollTab:Toggle({
     Value = autoFlingMurdererEnabled,
     Callback = function(state)
         autoFlingMurdererEnabled = state
-        LinuxHub.Toggles.autoFlingMurdererEnabled = state
-        if LinuxHub.SaveSettings then LinuxHub.SaveSettings() end
+        BanditHub.Toggles.autoFlingMurdererEnabled = state
+        if BanditHub.SaveSettings then BanditHub.SaveSettings() end
         WindUI:Notify({
             Title = "Auto Fling Murderer",
             Content = autoFlingMurdererEnabled and "Enabled" or "Disabled",
@@ -117,7 +117,7 @@ TrollTab:Toggle({
             autoFlingMurdererCoroutine = coroutine.create(function()
                 while autoFlingMurdererEnabled do
                     if _G.LINUXHUB_UPDATING then break end
-                    local target = LinuxHub.GetCurrentMurderer()
+                    local target = BanditHub.GetCurrentMurderer()
                     if target then
                         local launched = FlingPlayer(target, true)
                         if launched then
@@ -144,8 +144,8 @@ TrollTab:Toggle({
     Value = autoFlingSheriffEnabled,
     Callback = function(state)
         autoFlingSheriffEnabled = state
-        LinuxHub.Toggles.autoFlingSheriffEnabled = state
-        if LinuxHub.SaveSettings then LinuxHub.SaveSettings() end
+        BanditHub.Toggles.autoFlingSheriffEnabled = state
+        if BanditHub.SaveSettings then BanditHub.SaveSettings() end
         WindUI:Notify({
             Title = "Auto Fling Sheriff",
             Content = autoFlingSheriffEnabled and "Enabled" or "Disabled",
@@ -158,7 +158,7 @@ TrollTab:Toggle({
             autoFlingSheriffCoroutine = coroutine.create(function()
                 while autoFlingSheriffEnabled do
                     if _G.LINUXHUB_UPDATING then break end
-                    local target = LinuxHub.GetCurrentSheriff()
+                    local target = BanditHub.GetCurrentSheriff()
                     if target then
                         local launched = FlingPlayer(target, true)
                         if launched then
@@ -253,7 +253,7 @@ TrollTab:Button({
     end
 })
 
-local loopFlingSelectedEnabled = LinuxHub.Toggles.loopFlingSelectedEnabled or false
+local loopFlingSelectedEnabled = BanditHub.Toggles.loopFlingSelectedEnabled or false
 local loopFlingSelectedCoroutine = nil
 
 TrollTab:Toggle({
@@ -261,8 +261,8 @@ TrollTab:Toggle({
     Value = loopFlingSelectedEnabled,
     Callback = function(state)
         loopFlingSelectedEnabled = state
-        LinuxHub.Toggles.loopFlingSelectedEnabled = state
-        if LinuxHub.SaveSettings then LinuxHub.SaveSettings() end
+        BanditHub.Toggles.loopFlingSelectedEnabled = state
+        if BanditHub.SaveSettings then BanditHub.SaveSettings() end
         WindUI:Notify({
             Title = "Loop Fling Selected Player",
             Content = loopFlingSelectedEnabled and "Enabled" or "Disabled",
@@ -304,14 +304,14 @@ TrollTab:Toggle({
 game.Players.PlayerAdded:Connect(CreateFlingDropdown)
 game.Players.PlayerRemoving:Connect(CreateFlingDropdown)
 
-LinuxHub.DisableAll = function()
+BanditHub.DisableAll = function()
     autoFlingMurdererEnabled = false
-    LinuxHub.Toggles.autoFlingMurdererEnabled = false
+    BanditHub.Toggles.autoFlingMurdererEnabled = false
     autoFlingSheriffEnabled = false
-    LinuxHub.Toggles.autoFlingSheriffEnabled = false
+    BanditHub.Toggles.autoFlingSheriffEnabled = false
     loopFlingSelectedEnabled = false
-    LinuxHub.Toggles.loopFlingSelectedEnabled = false
-    if LinuxHub.SaveSettings then LinuxHub.SaveSettings() end
+    BanditHub.Toggles.loopFlingSelectedEnabled = false
+    if BanditHub.SaveSettings then BanditHub.SaveSettings() end
     if autoFlingMurdererCoroutine then
         autoFlingMurdererCoroutine = nil
     end

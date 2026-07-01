@@ -1,10 +1,10 @@
-local WindUI = LinuxHub.WindUI
-local utils = LinuxHub.Utils
-local config = LinuxHub.Config
+local WindUI = BanditHub.WindUI
+local utils = BanditHub.Utils
+local config = BanditHub.Config
 
-local VisualTab = LinuxHub.Window:Tab({ Title = "Visual" })
+local VisualTab = BanditHub.Window:Tab({ Title = "Visual" })
 
-local espEnabled = LinuxHub.Toggles.espEnabled or false
+local espEnabled = BanditHub.Toggles.espEnabled or false
 local highlightInstances = {}
 local espUpdateCooldown = 0
 
@@ -132,8 +132,8 @@ VisualTab:Toggle({
     Value = espEnabled,
     Callback = function(state)
         espEnabled = state
-        LinuxHub.Toggles.espEnabled = state
-        if LinuxHub.SaveSettings then LinuxHub.SaveSettings() end
+        BanditHub.Toggles.espEnabled = state
+        if BanditHub.SaveSettings then BanditHub.SaveSettings() end
         WindUI:Notify({
             Title = "ESP Highlight",
             Content = espEnabled and "ESP Enabled" or "ESP Disabled",
@@ -147,12 +147,12 @@ VisualTab:Toggle({
     end
 })
 
-LinuxHub.GetCurrentMurderer = GetCurrentMurderer
-LinuxHub.GetCurrentSheriff = GetCurrentSheriff
+BanditHub.GetCurrentMurderer = GetCurrentMurderer
+BanditHub.GetCurrentSheriff = GetCurrentSheriff
 
-LinuxHub.DisableAll = function()
+BanditHub.DisableAll = function()
     espEnabled = false
-    LinuxHub.Toggles.espEnabled = false
-    if LinuxHub.SaveSettings then LinuxHub.SaveSettings() end
+    BanditHub.Toggles.espEnabled = false
+    if BanditHub.SaveSettings then BanditHub.SaveSettings() end
     ClearESP()
 end

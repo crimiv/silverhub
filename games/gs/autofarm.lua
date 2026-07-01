@@ -3,11 +3,11 @@ local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
-local WindUI = LinuxHub.WindUI
-local utils = LinuxHub.Utils
-local config = LinuxHub.Config
+local WindUI = BanditHub.WindUI
+local utils = BanditHub.Utils
+local config = BanditHub.Config
 
-local FarmTab = LinuxHub.Window:Tab({ Title = "Auto Farm" })
+local FarmTab = BanditHub.Window:Tab({ Title = "Auto Farm" })
 
 local function getPosition(obj)
     if not obj then return nil end
@@ -21,7 +21,7 @@ local function getPosition(obj)
     return nil
 end
 
-local autoFarmEnabled = LinuxHub.Toggles.autoFarmEnabled or false
+local autoFarmEnabled = BanditHub.Toggles.autoFarmEnabled or false
 local loopTask = nil
 local childAddedConn = nil
 local isRunning = false
@@ -112,8 +112,8 @@ local function startAutoFarm()
     if isRunning then return end
     isRunning = true
     autoFarmEnabled = true
-    LinuxHub.Toggles.autoFarmEnabled = true
-    if LinuxHub.SaveSettings then LinuxHub.SaveSettings() end
+    BanditHub.Toggles.autoFarmEnabled = true
+    if BanditHub.SaveSettings then BanditHub.SaveSettings() end
     pcall(ScoreAll)
     loopTask = task.spawn(function()
         while isRunning do
@@ -135,10 +135,10 @@ end
 local function stopAutoFarm()
     isRunning = false
     autoFarmEnabled = false
-    LinuxHub.Toggles.autoFarmEnabled = false
+    BanditHub.Toggles.autoFarmEnabled = false
     if loopTask then task.cancel(loopTask); loopTask = nil end
     if childAddedConn then childAddedConn:Disconnect(); childAddedConn = nil end
-    if LinuxHub.SaveSettings then LinuxHub.SaveSettings() end
+    if BanditHub.SaveSettings then BanditHub.SaveSettings() end
     pcall(WindUI.Notify, WindUI, { Title = "Auto Farm", Content = "Disabled", Duration = 2 })
 end
 
@@ -153,7 +153,7 @@ pcall(function()
 end)
 
 local function createOrbitToggle(targetName, targetPath, defaultRadius, defaultSpeed)
-    local orbitEnabled = LinuxHub.Toggles["orbit_" .. targetName] or false
+    local orbitEnabled = BanditHub.Toggles["orbit_" .. targetName] or false
     local orbitHeartbeatConn = nil
     local isOrbiting = false
     local orbitAngle = 0
@@ -191,7 +191,7 @@ local function createOrbitToggle(targetName, targetPath, defaultRadius, defaultS
         if isOrbiting then return end
         isOrbiting = true
         orbitEnabled = true
-        LinuxHub.Toggles["orbit_" .. targetName] = true
+        BanditHub.Toggles["orbit_" .. targetName] = true
 
         local character = LocalPlayer.Character
         if character then
@@ -209,14 +209,14 @@ local function createOrbitToggle(targetName, targetPath, defaultRadius, defaultS
             end
         end)
 
-        if LinuxHub.SaveSettings then LinuxHub.SaveSettings() end
+        if BanditHub.SaveSettings then BanditHub.SaveSettings() end
         pcall(WindUI.Notify, WindUI, { Title = "Orbit around " .. targetName, Content = "Enabled", Duration = 2 })
     end
 
     local function stopOrbit()
         isOrbiting = false
         orbitEnabled = false
-        LinuxHub.Toggles["orbit_" .. targetName] = false
+        BanditHub.Toggles["orbit_" .. targetName] = false
 
         if orbitHeartbeatConn then
             orbitHeartbeatConn:Disconnect()
@@ -224,7 +224,7 @@ local function createOrbitToggle(targetName, targetPath, defaultRadius, defaultS
         end
 
         local anyOrbitActive = false
-        for key, val in pairs(LinuxHub.Toggles) do
+        for key, val in pairs(BanditHub.Toggles) do
             if string.find(key, "orbit_") and val then
                 anyOrbitActive = true
                 break
@@ -241,7 +241,7 @@ local function createOrbitToggle(targetName, targetPath, defaultRadius, defaultS
             end
         end
 
-        if LinuxHub.SaveSettings then LinuxHub.SaveSettings() end
+        if BanditHub.SaveSettings then BanditHub.SaveSettings() end
         pcall(WindUI.Notify, WindUI, { Title = "Orbit around " .. targetName, Content = "Disabled", Duration = 2 })
     end
 
@@ -286,9 +286,9 @@ end
 local stopOrbitDemonKing = createOrbitToggle("Demon King", getDemonKingPosition, 8, 2.0)
 local stopOrbitBorock = createOrbitToggle("Borock", getBorockPosition, 8, 2.0)
 
-LinuxHub.DisableAll = LinuxHub.DisableAll or function() end
-local oldDisable = LinuxHub.DisableAll
-LinuxHub.DisableAll = function()
+BanditHub.DisableAll = BanditHub.DisableAll or function() end
+local oldDisable = BanditHub.DisableAll
+BanditHub.DisableAll = function()
     stopAutoFarm()
     stopOrbitDemonKing()
     stopOrbitBorock()

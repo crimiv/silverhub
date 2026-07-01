@@ -2,7 +2,7 @@ local function Fetch(url)
     return game:HttpGet(url)
 end
 
-local BASE_URL = "https://raw.githubusercontent.com/crimiv/linuxhub/main/"
+local BASE_URL = "https://raw.githubusercontent.com/crimiv/bandithub/main/"
 
 local function LoadScript(name)
     local script = Fetch(BASE_URL .. name)
@@ -22,21 +22,21 @@ else
     version = "1.0.0"
 end
 
-LINUXHUB_VERSION = version
+BANDITHUB_VERSION = version
 
 local function PerformUpdate(newVersion)
-    _G.LINUXHUB_UPDATING = true
-    if LinuxHub then
-        LinuxHub.Toggles = LinuxHub.Toggles or {}
-        _G.LINUXHUB_STATES = LinuxHub.Toggles
-        if LinuxHub.Window then
-            LinuxHub.Window:Close()
+    _G.BANDITHUB_UPDATING = true
+    if BanditHub then
+        BanditHub.Toggles = BanditHub.Toggles or {}
+        _G.BANDITHUB_STATES = BanditHub.Toggles
+        if BanditHub.Window then
+            BanditHub.Window:Close()
         end
-        if LinuxHub.DisableAll then
-            LinuxHub.DisableAll()
+        if BanditHub.DisableAll then
+            BanditHub.DisableAll()
         end
     end
-    local WindUI = LinuxHub and LinuxHub.WindUI
+    local WindUI = BanditHub and BanditHub.WindUI
     if WindUI then
         WindUI:Notify({
             Title = "Updating",
@@ -51,19 +51,19 @@ local function PerformUpdate(newVersion)
         })
     end
     task.wait(1)
-    _G.LINUXHUB_UPDATING = false
+    _G.BANDITHUB_UPDATING = false
     loadstring(game:HttpGet(BASE_URL .. "main.lua"))()
 end
 
 task.spawn(function()
     while true do
         task.wait(1)
-        if _G.LINUXHUB_UPDATING then break end
+        if _G.BANDITHUB_UPDATING then break end
         local success, newVersion = pcall(function()
             local raw = game:HttpGet(BASE_URL .. "version.txt")
             return raw:gsub("%s+", "")
         end)
-        if success and newVersion and newVersion ~= LINUXHUB_VERSION then
+        if success and newVersion and newVersion ~= BANDITHUB_VERSION then
             PerformUpdate(newVersion)
             break
         end
