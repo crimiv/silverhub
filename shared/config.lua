@@ -12,7 +12,5 @@ return {
     themes = {
         "Linux",
     },
-    -- Whether to attempt running the adonisbypass script at startup.
-    -- Set to false to disable automatic bypass execution.
-    RunBypass = true,
+    -- adonisbypass is now always loaded by the hub's startup sequence.
 }
