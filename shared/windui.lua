@@ -1,7 +1,7 @@
 local function FetchWindUIScript()
     local urls = {
-        "https://raw.githubusercontent.com/Footagesus/WindUI/main/main.lua",
         "https://github.com/Footagesus/WindUI/releases/latest/download/main.lua",
+        "https://raw.githubusercontent.com/Footagesus/WindUI/main/main.lua",
     }
     local lastError
     for _, url in ipairs(urls) do
