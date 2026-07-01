@@ -30,3 +30,13 @@ jobs:
             sudo apt-get update && sudo apt-get install -y lua5.3
             find . -name "*.lua" -print0 | xargs -0 -n1 luac -p || true
           fi
+      - name: Run smoke tests
+        run: |
+          if command -v lua5.3 >/dev/null 2>&1; then
+            lua5.3 ci/smoke.lua || true
+          elif command -v lua >/dev/null 2>&1; then
+            lua ci/smoke.lua || true
+          else
+            sudo apt-get update && sudo apt-get install -y lua5.3
+            lua5.3 ci/smoke.lua || true
+          fi
