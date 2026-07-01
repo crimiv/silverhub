@@ -478,7 +478,10 @@ CombatTab:Button({
     end
 })
 
+-- NOTE: prevent unintended teleporting due to saved settings being true on load.
+-- Only run auto-tp logic after the user explicitly toggles it ON in THIS session.
 local autoGunTPEnabled = BanditHub.Toggles.autoGunTPEnabled or false
+local userEnabledThisSession = false
 local gunTPTimer = nil
 local gunTPLastCheck = 0
 local currentSheriff = nil
@@ -507,7 +510,10 @@ end
 
 local function TryTeleportToGun()
     if _G.BANDITHUB_UPDATING then return end
+    -- Hard guard: if the user never turned it on in this session, do nothing.
+    if not userEnabledThisSession then return end
     if not autoGunTPEnabled or isTeleporting then return end
+
     if IsInLobby() then return end
     if not IsPlayerAlive() or not IsRoundActive() then return end
     local localPlayer = game.Players.LocalPlayer
@@ -522,7 +528,9 @@ end
 local function SetupAutoGunTP()
     CleanupAutoGunTP()
     if not autoGunTPEnabled then return end
+    -- At this point, the UI callback will have set userEnabledThisSession=true.
     TryTeleportToGun()
+
     gunTPLastCheck = 0
     gunTPTimer = game:GetService("RunService").Stepped:Connect(function()
         if _G.BANDITHUB_UPDATING then return end
@@ -572,7 +580,9 @@ CombatTab:Toggle({
     Value = autoGunTPEnabled,
     Callback = function(state)
         autoGunTPEnabled = state
+        userEnabledThisSession = state == true
         BanditHub.Toggles.autoGunTPEnabled = state
+
         if BanditHub.SaveSettings then BanditHub.SaveSettings() end
         WindUI:Notify({
             Title = "Auto TP to Gun",
@@ -588,8 +598,10 @@ CombatTab:Toggle({
 })
 
 BanditHub.DisableAll = function()
+    userEnabledThisSession = false
     autoShootEnabled = false
     BanditHub.Toggles.autoShootEnabled = false
+
     autoKillAllEnabled = false
     BanditHub.Toggles.autoKillAllEnabled = false
     autoGunTPEnabled = false
