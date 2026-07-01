@@ -1,12 +1,20 @@
 local BASE_URL = "https://raw.githubusercontent.com/crimiv/linuxhub/main/"
 
 local function readLocalFile(path)
+    if type(readfile) == "function" and type(isfile) == "function" then
+        local ok, content = pcall(readfile, path)
+        if ok and type(content) == "string" then
+            return content
+        end
+    end
+
     local ok, file = pcall(function()
         return io.open(path, "r")
     end)
     if not ok or not file then
         return nil
     end
+
     local content = file:read("*a")
     file:close()
     return content
@@ -16,7 +24,10 @@ local function Fetch(url, opts)
     opts = opts or {}
     local function fallbackLocal()
         if opts.resourcePath then
-            return readLocalFile(opts.resourcePath) or readLocalFile("vendor/" .. opts.resourcePath)
+            return readLocalFile(opts.resourcePath)
+                or readLocalFile("vendor/" .. opts.resourcePath)
+                or readLocalFile("shared/" .. opts.resourcePath)
+                or readLocalFile("vendor/shared/" .. opts.resourcePath)
         end
         return nil
     end

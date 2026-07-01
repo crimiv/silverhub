@@ -19,6 +19,13 @@ end
 -- Try to read a local vendor file as a fallback when network fetch fails.
 local function readVendor(resourcePath)
     local vendorPath = "vendor/" .. resourcePath
+    if type(readfile) == "function" and type(isfile) == "function" then
+        local ok, content = pcall(readfile, vendorPath)
+        if ok and type(content) == "string" then
+            return content
+        end
+    end
+
     local ok, f = pcall(function() return io.open(vendorPath, "r") end)
     if not ok or not f then return nil end
     local content = f:read("*a")
