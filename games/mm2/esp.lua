@@ -7,6 +7,9 @@ local VisualTab = LinuxHub.Window:Tab({ Title = "Visual" })
 local espEnabled = LinuxHub.Toggles.espEnabled or false
 local highlightInstances = {}
 local espUpdateCooldown = 0
+local gunHighlightEnabled = LinuxHub.Toggles.gunHighlightEnabled or false
+local gunHighlightInstances = {}
+local gunHighlightConnection = nil
 
 local function GetPlayerRoleColor(player)
     if not player then return nil end
@@ -26,6 +29,70 @@ local function ClearESP()
         end
     end
     highlightInstances = {}
+end
+
+local function ClearGunHighlights()
+    for _, highlight in pairs(gunHighlightInstances) do
+        if highlight and highlight.Parent then
+            highlight:Destroy()
+        end
+    end
+    gunHighlightInstances = {}
+end
+
+local function IsGunDrop(instance)
+    if not instance then return false end
+    return instance.Name == "GunDrop"
+end
+
+local function TryHighlightGunDrop(instance)
+    if not gunHighlightEnabled or not instance or gunHighlightInstances[instance] then return false end
+    if not IsGunDrop(instance) then return false end
+
+    local highlight = Instance.new("Highlight")
+    highlight.Adornee = instance
+    highlight.FillColor = Color3.fromRGB(255, 255, 0)
+    highlight.FillTransparency = 0.4
+    highlight.OutlineColor = Color3.fromRGB(255, 255, 0)
+    highlight.OutlineTransparency = 0.2
+    highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+    highlight.Parent = instance
+    gunHighlightInstances[instance] = highlight
+    return true
+end
+
+local function ScanForGunDrops()
+    if not gunHighlightEnabled then return end
+    for _, child in ipairs(workspace:GetDescendants()) do
+        if child and child.Parent then
+            TryHighlightGunDrop(child)
+        end
+    end
+end
+
+local function SetupGunHighlightTracking()
+    if gunHighlightConnection then
+        gunHighlightConnection:Disconnect()
+        gunHighlightConnection = nil
+    end
+
+    if not gunHighlightEnabled then
+        ClearGunHighlights()
+        return
+    end
+
+    ScanForGunDrops()
+    gunHighlightConnection = workspace.DescendantAdded:Connect(function(instance)
+        if _G.LINUXHUB_UPDATING then return end
+        if not gunHighlightEnabled then return end
+        if TryHighlightGunDrop(instance) then
+            WindUI:Notify({
+                Title = "Gun Highlight",
+                Content = "Sheriff gun dropped",
+                Duration = 2,
+            })
+        end
+    end)
 end
 
 local function UpdateESP()
@@ -147,12 +214,37 @@ VisualTab:Toggle({
     end
 })
 
+VisualTab:Toggle({
+    Title = "Gun Highlight",
+    Value = gunHighlightEnabled,
+    Callback = function(state)
+        gunHighlightEnabled = state
+        LinuxHub.Toggles.gunHighlightEnabled = state
+        if LinuxHub.SaveSettings then LinuxHub.SaveSettings() end
+        WindUI:Notify({
+            Title = "Gun Highlight",
+            Content = gunHighlightEnabled and "Enabled" or "Disabled",
+            Duration = 2,
+        })
+        SetupGunHighlightTracking()
+    end
+})
+
+SetupGunHighlightTracking()
+
 LinuxHub.GetCurrentMurderer = GetCurrentMurderer
 LinuxHub.GetCurrentSheriff = GetCurrentSheriff
 
 LinuxHub.DisableAll = function()
     espEnabled = false
+    gunHighlightEnabled = false
     LinuxHub.Toggles.espEnabled = false
+    LinuxHub.Toggles.gunHighlightEnabled = false
     if LinuxHub.SaveSettings then LinuxHub.SaveSettings() end
     ClearESP()
+    ClearGunHighlights()
+    if gunHighlightConnection then
+        gunHighlightConnection:Disconnect()
+        gunHighlightConnection = nil
+    end
 end
