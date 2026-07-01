@@ -15,13 +15,7 @@ if bypassFn then
     bypassFn()
 end
 
-local version = Fetch(BASE_URL .. "version.txt")
-if version then
-    version = version:gsub("%s+", "")
-else
-    version = "1.0.0"
-end
-
+local version = "1.0.0"
 LINUXHUB_VERSION = version
 
 local gamesList = Fetch(BASE_URL .. "games.lua")
