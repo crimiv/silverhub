@@ -43,7 +43,7 @@ local function SaveSettings()
         if not writefile then return end
         local data = {
             toggles = BanditHub.Toggles,
-            theme = BanditHub.CurrentTheme or "Linux",
+            theme = BanditHub.CurrentTheme or "Bandit",
         }
         writefile(BanditHub.SettingsFile, game:GetService("HttpService"):JSONEncode(data))
     end)
@@ -71,14 +71,14 @@ LoadSettings()
 local version = LINUXHUB_VERSION or "1.0.0"
 
 local Window = WindUI:CreateWindow({
-    Title = "Linux Hub v" .. version,
+    Title = "Bandit Hub v" .. version,
     Author = "by coolio",
     Folder = "BanditHub",
     Size = UDim2.fromOffset(580, 460),
     MinSize = Vector2.new(560, 350),
     MaxSize = Vector2.new(850, 560),
     Transparent = true,
-    Theme = BanditHub.CurrentTheme or "Linux",
+    Theme = BanditHub.CurrentTheme or "Bandit",
     Resizable = true,
     SideBarWidth = 200,
     HideSearchBar = true,
