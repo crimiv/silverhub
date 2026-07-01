@@ -247,13 +247,13 @@ CombatTab:Button({
         local sheriff = LinuxHub.GetCurrentSheriff()
         local killed = 0
         for _, player in pairs(game.Players:GetPlayers()) do
-            if player ~= localPlayer and (not sheriff or player ~= sheriff) then
-                if player.Character then
-                    local rootPart = player.Character:FindFirstChild("HumanoidRootPart")
-                    if rootPart then
-                        handleTouched:FireServer(rootPart)
-                        killed = killed + 1
-                    end
+            if player == localPlayer then continue end
+            if sheriff and player == sheriff then continue end
+            if player.Character then
+                local rootPart = player.Character:FindFirstChild("HumanoidRootPart")
+                if rootPart then
+                    handleTouched:FireServer(rootPart)
+                    killed = killed + 1
                 end
             end
         end
