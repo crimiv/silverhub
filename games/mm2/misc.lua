@@ -314,17 +314,19 @@ local function AntiFlingLoop()
     if not localChar then return end
 
     for _, player in ipairs(game.Players:GetPlayers()) do
-        if player == localPlayer then continue end
-        local char = player.Character
-        if not char then continue end
-        local root = char:FindFirstChild("HumanoidRootPart")
-        if root then
-            pcall(function()
-                root.CustomPhysicalProperties = PhysicalProperties.new(0.0001, 0, 0, 0, 0)
-                root.Velocity = Vector3.new(0, 0, 0)
-                root.RotVelocity = Vector3.new(0, 0, 0)
-                root.CanCollide = false
-            end)
+        if player ~= localPlayer then
+            local char = player.Character
+            if char then
+                local root = char:FindFirstChild("HumanoidRootPart")
+                if root then
+                    pcall(function()
+                        root.CustomPhysicalProperties = PhysicalProperties.new(0.0001, 0, 0, 0, 0)
+                        root.Velocity = Vector3.new(0, 0, 0)
+                        root.RotVelocity = Vector3.new(0, 0, 0)
+                        root.CanCollide = false
+                    end)
+                end
+            end
         end
     end
 

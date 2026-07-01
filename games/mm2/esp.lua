@@ -6,9 +6,10 @@ local VisualTab = LinuxHub.Window:Tab({ Title = "Visual" })
 
 local espEnabled = LinuxHub.Toggles.espEnabled or false
 local skeletonEnabled = LinuxHub.Toggles.skeletonEnabled or false
-local highlightInstances = {}
+local gunESPEnabled = LinuxHub.Toggles.gunESPEnabled == nil and true or LinuxHub.Toggles.gunESPEnabled
+local playerHighlightInstances = {}
+local gunDropHighlightInstances = {}
 local skeletonLines = {}
-local espUpdateCooldown = 0
 
 local function GetPlayerRoleColor(player)
     if not player then return nil end
@@ -21,13 +22,27 @@ local function GetPlayerRoleColor(player)
     end
 end
 
-local function ClearESP()
-    for _, highlight in pairs(highlightInstances) do
+local function ClearPlayerHighlights()
+    for _, highlight in pairs(playerHighlightInstances) do
         if highlight and highlight.Parent then
             highlight:Destroy()
         end
     end
-    highlightInstances = {}
+    playerHighlightInstances = {}
+end
+
+local function ClearGunDropHighlights()
+    for _, highlight in pairs(gunDropHighlightInstances) do
+        if highlight and highlight.Parent then
+            highlight:Destroy()
+        end
+    end
+    gunDropHighlightInstances = {}
+end
+
+local function ClearESP()
+    ClearPlayerHighlights()
+    ClearGunDropHighlights()
 end
 
 local function ClearSkeleton()
@@ -172,40 +187,101 @@ local function UpdateSkeleton(player)
     end
 end
 
+local function UpdatePlayerHighlights()
+    local localPlayer = game.Players.LocalPlayer
+    if not localPlayer then
+        ClearPlayerHighlights()
+        return
+    end
+
+    for player, highlight in pairs(playerHighlightInstances) do
+        if not player or player == localPlayer or not player.Character then
+            if highlight and highlight.Parent then
+                highlight:Destroy()
+            end
+            playerHighlightInstances[player] = nil
+        end
+    end
+
+    for _, player in pairs(game.Players:GetPlayers()) do
+        if player ~= localPlayer then
+            local roleColor = GetPlayerRoleColor(player)
+            local highlight = playerHighlightInstances[player]
+            if roleColor and player.Character then
+                if not highlight then
+                    highlight = Instance.new("Highlight")
+                    highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+                    highlight.Parent = workspace
+                    playerHighlightInstances[player] = highlight
+                end
+                highlight.Adornee = player.Character
+                highlight.FillColor = roleColor
+                highlight.FillTransparency = 0.5
+                highlight.OutlineColor = roleColor
+                highlight.OutlineTransparency = 0.2
+                highlight.Visible = true
+            elseif highlight then
+                highlight:Destroy()
+                playerHighlightInstances[player] = nil
+            end
+        end
+    end
+end
+
+local function UpdateGunDropHighlights()
+    if not gunESPEnabled then
+        ClearGunDropHighlights()
+        return
+    end
+
+    local activeDrops = {}
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        if obj.Name == "GunDrop" then
+            activeDrops[obj] = true
+            local highlight = gunDropHighlightInstances[obj]
+            if not highlight then
+                highlight = Instance.new("Highlight")
+                highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+                highlight.FillColor = Color3.new(1, 0.8, 0)
+                highlight.OutlineColor = Color3.new(1, 1, 1)
+                highlight.FillTransparency = 0.3
+                highlight.OutlineTransparency = 0.15
+                highlight.Parent = workspace
+                gunDropHighlightInstances[obj] = highlight
+            end
+            highlight.Adornee = obj
+            highlight.Visible = true
+        end
+    end
+
+    for obj, highlight in pairs(gunDropHighlightInstances) do
+        if not activeDrops[obj] and highlight and highlight.Parent then
+            highlight:Destroy()
+            gunDropHighlightInstances[obj] = nil
+        end
+    end
+end
+
 local function UpdateESP()
     if _G.LINUXHUB_UPDATING then
         ClearESP()
         ClearSkeleton()
         return
     end
-    ClearESP()
-    if not espEnabled then
-        if skeletonEnabled then
-            for _, player in pairs(game.Players:GetPlayers()) do
+
+    if espEnabled then
+        UpdatePlayerHighlights()
+    else
+        ClearPlayerHighlights()
+    end
+
+    UpdateGunDropHighlights()
+
+    if skeletonEnabled then
+        for _, player in pairs(game.Players:GetPlayers()) do
+            if player ~= game.Players.LocalPlayer then
                 UpdateSkeleton(player)
             end
-        end
-        return
-    end
-    local localPlayer = game.Players.LocalPlayer
-    if not localPlayer then return end
-    for _, player in pairs(game.Players:GetPlayers()) do
-        if player == localPlayer then continue end
-        if not player.Character then continue end
-        local roleColor = GetPlayerRoleColor(player)
-        if not roleColor then continue end
-        local highlight = Instance.new("Highlight")
-        highlight.Adornee = player.Character
-        highlight.FillColor = roleColor
-        highlight.FillTransparency = 0.5
-        highlight.OutlineColor = roleColor
-        highlight.OutlineTransparency = 0.2
-        highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-        highlight.Parent = player.Character
-        highlightInstances[player] = highlight
-
-        if skeletonEnabled then
-            UpdateSkeleton(player)
         end
     end
 end
@@ -253,13 +329,8 @@ if roundTimer then
     end)
 end
 
-if espEnabled then UpdateESP() end
-if skeletonEnabled then
-    for _, player in pairs(game.Players:GetPlayers()) do
-        if player ~= game.Players.LocalPlayer then
-            UpdateSkeleton(player)
-        end
-    end
+if espEnabled or skeletonEnabled or gunESPEnabled then
+    UpdateESP()
 end
 
 game.Players.PlayerAdded:Connect(function(player)
@@ -268,15 +339,14 @@ game.Players.PlayerAdded:Connect(function(player)
         if _G.LINUXHUB_UPDATING then return end
         task.wait(0.5)
         UpdateESP()
-        if skeletonEnabled then UpdateSkeleton(player) end
     end)
 end)
 
 game.Players.PlayerRemoving:Connect(function(player)
     if _G.LINUXHUB_UPDATING then return end
-    if highlightInstances[player] then
-        highlightInstances[player]:Destroy()
-        highlightInstances[player] = nil
+    if playerHighlightInstances[player] then
+        playerHighlightInstances[player]:Destroy()
+        playerHighlightInstances[player] = nil
     end
     if skeletonLines[player] then
         for _, line in pairs(skeletonLines[player]) do
@@ -286,24 +356,9 @@ game.Players.PlayerRemoving:Connect(function(player)
     end
 end)
 
-game:GetService("RunService").Heartbeat:Connect(function()
+game:GetService("RunService").RenderStepped:Connect(function()
     if _G.LINUXHUB_UPDATING then return end
-    local now = tick()
-    if espEnabled or skeletonEnabled then
-        if now - espUpdateCooldown >= 0.3 then
-            espUpdateCooldown = now
-            if espEnabled then
-                UpdateESP()
-            end
-            if skeletonEnabled then
-                for _, player in pairs(game.Players:GetPlayers()) do
-                    if player ~= game.Players.LocalPlayer then
-                        UpdateSkeleton(player)
-                    end
-                end
-            end
-        end
-    end
+    UpdateESP()
 end)
 
 VisualTab:Toggle({
@@ -319,9 +374,29 @@ VisualTab:Toggle({
             Duration = 2,
         })
         if not espEnabled then
-            ClearESP()
+            ClearPlayerHighlights()
         else
             UpdateESP()
+        end
+    end
+})
+
+VisualTab:Toggle({
+    Title = "Dropped Gun ESP",
+    Value = gunESPEnabled,
+    Callback = function(state)
+        gunESPEnabled = state
+        LinuxHub.Toggles.gunESPEnabled = state
+        if LinuxHub.SaveSettings then LinuxHub.SaveSettings() end
+        WindUI:Notify({
+            Title = "Dropped Gun ESP",
+            Content = gunESPEnabled and "Enabled" or "Disabled",
+            Duration = 2,
+        })
+        if not gunESPEnabled then
+            ClearGunDropHighlights()
+        else
+            UpdateGunDropHighlights()
         end
     end
 })
@@ -356,8 +431,10 @@ LinuxHub.GetCurrentSheriff = GetCurrentSheriff
 LinuxHub.DisableAll = function()
     espEnabled = false
     skeletonEnabled = false
+    gunESPEnabled = false
     LinuxHub.Toggles.espEnabled = false
     LinuxHub.Toggles.skeletonEnabled = false
+    LinuxHub.Toggles.gunESPEnabled = false
     if LinuxHub.SaveSettings then LinuxHub.SaveSettings() end
     ClearESP()
     ClearSkeleton()
