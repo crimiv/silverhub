@@ -1,19 +1,50 @@
 local BASE_URL = "https://raw.githubusercontent.com/crimiv/linuxhub/main/"
 
-local function Fetch(url)
-    local response = game:HttpGet(url)
-    if type(response) ~= "string" then
-        error("Failed to fetch URL: " .. tostring(url))
+local function readLocalFile(path)
+    local ok, file = pcall(function()
+        return io.open(path, "r")
+    end)
+    if not ok or not file then
+        return nil
     end
+    local content = file:read("*a")
+    file:close()
+    return content
+end
+
+local function Fetch(url, opts)
+    opts = opts or {}
+    local function fallbackLocal()
+        if opts.resourcePath then
+            return readLocalFile(opts.resourcePath) or readLocalFile("vendor/" .. opts.resourcePath)
+        end
+        return nil
+    end
+
+    local success, response = pcall(function()
+        return game:HttpGet(url)
+    end)
+    if not success or type(response) ~= "string" then
+        local fallback = fallbackLocal()
+        if fallback then
+            return fallback
+        end
+        error("Failed to fetch URL: " .. tostring(url) .. " (" .. tostring(response) .. ")")
+    end
+
     local normalized = response:gsub("^%s+", "")
-    if normalized:find("^<") or normalized:find("404: Not Found") or normalized:find("403: Forbidden") or normalized:find("Bad Request") then
+    if normalized:find("^<") or normalized:find("404: Not Found") or normalized:find("403: Forbidden") or normalized:find("Bad Request") or normalized:find("429") or normalized:find("Too Many Requests") or normalized:find("rate limit") then
+        local fallback = fallbackLocal()
+        if fallback then
+            return fallback
+        end
         error("Invalid fetch response from " .. tostring(url))
     end
     return response
 end
 
 local function LoadScript(name)
-    local script = Fetch(BASE_URL .. name)
+    local script = Fetch(BASE_URL .. name, { resourcePath = name })
     local fn, err = loadstring(script)
     if not fn then
         error("Failed to compile " .. tostring(name) .. ": " .. tostring(err))
@@ -47,7 +78,7 @@ end
 local version = "1.0.0"
 LINUXHUB_VERSION = version
 
-local gamesList = Fetch(BASE_URL .. "games.lua")
+local gamesList = Fetch(BASE_URL .. "games.lua", { resourcePath = "games.lua" })
 local gamesFn, gamesErr = loadstring(gamesList)
 if not gamesFn then
     error("Failed to compile games list: " .. tostring(gamesErr))
