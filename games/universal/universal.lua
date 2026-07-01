@@ -1,7 +1,24 @@
 local WindUI = LinuxHub.WindUI
 
--- Admin section
-local AdminTab = LinuxHub.Window:Tab({ Title = "Admin" })
+-- Create one unified "Universal" tab and group admin/misc controls under it
+local UniversalTab = LinuxHub.Window:CreateTab({
+    Title = "Universal",
+    Icon = "rbxassetid://11942428",
+})
+
+local function notify(title, content, duration)
+    WindUI:Notify({
+        Title = title,
+        Content = content,
+        Duration = duration or 3,
+    })
+end
+
+-- Admin controls
+UniversalTab:Paragraph({
+    Title = "Admin Tools",
+    Content = "Load popular admin scripts. Use responsibly."
+})
 
 local function LoadAdmin(url)
     local success, result = pcall(function()
@@ -12,36 +29,33 @@ local function LoadAdmin(url)
         end
     end)
     if not success then
-        WindUI:Notify({
-            Title = "Error",
-            Content = "Failed to load admin script. Check your connection.",
-            Duration = 4,
-        })
+        notify("Admin: Load Failed", "Failed to load admin script. Check your connection.")
     else
-        WindUI:Notify({
-            Title = "Admin Loaded",
-            Content = "Admin script executed successfully.",
-            Duration = 3,
-        })
+        notify("Admin: Loaded", "Admin script executed successfully.")
     end
 end
 
-AdminTab:Button({
+UniversalTab:Button({
     Title = "Load Nameless Admin",
     Callback = function()
         LoadAdmin("https://raw.githubusercontent.com/ltseverydayyou/Nameless-Admin/main/Source.lua")
     end
 })
 
-AdminTab:Button({
+UniversalTab:Button({
     Title = "Load Infinite Yield",
     Callback = function()
         LoadAdmin("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source")
     end
 })
 
--- Misc section
-local MiscTab = LinuxHub.Window:Tab({ Title = "Misc" })
+-- Misc controls
+UniversalTab:Paragraph({
+    Title = "Misc Tools",
+    Content = "Utility scripts and small helpers."
+})
+
+local MiscTab = UniversalTab
 
 local antiFlingEnabled = LinuxHub.Toggles.antiFlingEnabled or false
 local antiFlingHeartbeat = nil
@@ -117,17 +131,9 @@ local function LoadDex(url)
         end
     end)
     if not success then
-        WindUI:Notify({
-            Title = "Error",
-            Content = "Failed to load Dex. Check your connection.",
-            Duration = 4,
-        })
+        notify("Dex: Load Failed", "Failed to load Dex. Check your connection.")
     else
-        WindUI:Notify({
-            Title = "Dex Loaded",
-            Content = "Dex loaded successfully.",
-            Duration = 3,
-        })
+        notify("Dex: Loaded", "Dex loaded successfully.")
     end
 end
 
@@ -147,17 +153,9 @@ local function LoadSimpleSpy(url)
         end
     end)
     if not success then
-        WindUI:Notify({
-            Title = "Error",
-            Content = "Failed to load Simple Spy. Check your connection.",
-            Duration = 4,
-        })
+        notify("Simple Spy: Load Failed", "Failed to load Simple Spy. Check your connection.")
     else
-        WindUI:Notify({
-            Title = "Simple Spy Loaded",
-            Content = "Simple Spy loaded successfully.",
-            Duration = 3,
-        })
+        notify("Simple Spy: Loaded", "Simple Spy loaded successfully.")
     end
 end
 
@@ -177,17 +175,9 @@ local function LoadCobalt(url)
         end
     end)
     if not success then
-        WindUI:Notify({
-            Title = "Error",
-            Content = "Failed to load Cobalt. Check your connection.",
-            Duration = 4,
-        })
+        notify("Cobalt: Load Failed", "Failed to load Cobalt. Check your connection.")
     else
-        WindUI:Notify({
-            Title = "Cobalt Loaded",
-            Content = "Cobalt loaded successfully.",
-            Duration = 3,
-        })
+        notify("Cobalt: Loaded", "Cobalt loaded successfully.")
     end
 end
 
