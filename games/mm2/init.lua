@@ -98,7 +98,6 @@ end
 
 LoadScript("games/mm2/esp.lua")
 LoadScript("games/mm2/combat.lua")
-LoadScript("games/mm2/anticheat.lua")
 LoadScript("games/mm2/troll.lua")
 LoadScript("games/mm2/misc.lua")
 LoadScript("games/mm2/teleport.lua")

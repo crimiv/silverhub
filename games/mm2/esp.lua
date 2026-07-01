@@ -5,9 +5,7 @@ local config = LinuxHub.Config
 local VisualTab = LinuxHub.Window:Tab({ Title = "Visual" })
 
 local espEnabled = LinuxHub.Toggles.espEnabled or false
-local gunHighlightEnabled = LinuxHub.Toggles.gunHighlightEnabled or false
 local highlightInstances = {}
-local gunHighlightInstance = nil
 local espUpdateCooldown = 0
 
 local function GetPlayerRoleColor(player)
@@ -30,22 +28,13 @@ local function ClearESP()
     highlightInstances = {}
 end
 
-local function ClearGunHighlight()
-    if gunHighlightInstance and gunHighlightInstance.Parent then
-        gunHighlightInstance:Destroy()
-    end
-    gunHighlightInstance = nil
-end
-
 local function UpdateESP()
     if _G.LINUXHUB_UPDATING then
         ClearESP()
         return
     end
     ClearESP()
-    if not espEnabled then
-        return
-    end
+    if not espEnabled then return end
     local localPlayer = game.Players.LocalPlayer
     if not localPlayer then return end
     for _, player in pairs(game.Players:GetPlayers()) do
@@ -62,44 +51,6 @@ local function UpdateESP()
         highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
         highlight.Parent = player.Character
         highlightInstances[player] = highlight
-    end
-end
-
-local function UpdateGunHighlight()
-    if _G.LINUXHUB_UPDATING then
-        ClearGunHighlight()
-        return
-    end
-    
-    if not gunHighlightEnabled then
-        ClearGunHighlight()
-        return
-    end
-
-    local workspace = game:GetService("Workspace")
-    local gunFound = false
-    
-    -- Look for dropped gun in workspace
-    for _, part in pairs(workspace:FindPartBoundsInRadius(workspace:FindFirstChild("Baseplate") and workspace.Baseplate.Position or Vector3.new(0, 0, 0), 500)) do
-        if part.Name == "Gun" and not part.Parent:FindFirstChild("Humanoid") then
-            gunFound = true
-            if not gunHighlightInstance or gunHighlightInstance.Adornee ~= part then
-                ClearGunHighlight()
-                gunHighlightInstance = Instance.new("Highlight")
-                gunHighlightInstance.Adornee = part
-                gunHighlightInstance.FillColor = config.colors.sheriff
-                gunHighlightInstance.FillTransparency = 0.5
-                gunHighlightInstance.OutlineColor = config.colors.sheriff
-                gunHighlightInstance.OutlineTransparency = 0.2
-                gunHighlightInstance.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-                gunHighlightInstance.Parent = part
-            end
-            break
-        end
-    end
-    
-    if not gunFound then
-        ClearGunHighlight()
     end
 end
 
@@ -167,16 +118,11 @@ end)
 
 game:GetService("RunService").Heartbeat:Connect(function()
     if _G.LINUXHUB_UPDATING then return end
-    local now = tick()
-    if espEnabled or gunHighlightEnabled then
+    if espEnabled then
+        local now = tick()
         if now - espUpdateCooldown >= 0.3 then
             espUpdateCooldown = now
-            if espEnabled then
-                UpdateESP()
-            end
-            if gunHighlightEnabled then
-                UpdateGunHighlight()
-            end
+            UpdateESP()
         end
     end
 end)
@@ -201,35 +147,12 @@ VisualTab:Toggle({
     end
 })
 
-VisualTab:Toggle({
-    Title = "Gun Highlight",
-    Value = gunHighlightEnabled,
-    Callback = function(state)
-        gunHighlightEnabled = state
-        LinuxHub.Toggles.gunHighlightEnabled = state
-        if LinuxHub.SaveSettings then LinuxHub.SaveSettings() end
-        WindUI:Notify({
-            Title = "Gun Highlight",
-            Content = gunHighlightEnabled and "Gun Highlight Enabled" or "Gun Highlight Disabled",
-            Duration = 2,
-        })
-        if not gunHighlightEnabled then
-            ClearGunHighlight()
-        else
-            UpdateGunHighlight()
-        end
-    end
-})
-
 LinuxHub.GetCurrentMurderer = GetCurrentMurderer
 LinuxHub.GetCurrentSheriff = GetCurrentSheriff
 
 LinuxHub.DisableAll = function()
     espEnabled = false
-    gunHighlightEnabled = false
     LinuxHub.Toggles.espEnabled = false
-    LinuxHub.Toggles.gunHighlightEnabled = false
     if LinuxHub.SaveSettings then LinuxHub.SaveSettings() end
     ClearESP()
-    ClearGunHighlight()
 end
