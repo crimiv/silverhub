@@ -1,11 +1,10 @@
 local WindUI = BanditHub.WindUI
 local utils = BanditHub.Utils
+local config = BanditHub.Config
 
 local CombatTab = BanditHub.Window:Tab({ Title = "Combat" })
 
-
 local roundTimer = workspace:FindFirstChild("RoundTimerPart")
-
 
 local function IsPlayerAlive()
     local localPlayer = game.Players.LocalPlayer
@@ -36,8 +35,7 @@ local function IsInLobby()
 end
 
 local autoShootEnabled = BanditHub.Toggles.autoShootEnabled or false
-local AUTO_SHOOT_COOLDOWN = 0.3
-
+local AUTO_SHOOT_COOLDOWN = config.cooldowns.autoShoot
 local lastAutoShootTime = 0
 
 local function ShootAtMurderer(silent)
@@ -269,11 +267,155 @@ CombatTab:Button({
 })
 
 local autoKillAllEnabled = BanditHub.Toggles.autoKillAllEnabled or false
-local AUTO_KILL_ALL_COOLDOWN = 1
-
+local AUTO_KILL_ALL_COOLDOWN = config.cooldowns.autoKillAll
 local lastAutoKillAllTime = 0
 
+local function miniFling(targetPlayer)
+    if _G.BANDITHUB_UPDATING then return end
+    local localPlayer = game.Players.LocalPlayer
+    if not localPlayer or not localPlayer.Character then return end
+    if not targetPlayer or not targetPlayer.Character then return end
+
+    local character = localPlayer.Character
+    local humanoid = character:FindFirstChildOfClass("Humanoid")
+    local rootPart = humanoid and humanoid.RootPart
+
+    local tCharacter = targetPlayer.Character
+    local tHumanoid = tCharacter:FindFirstChildOfClass("Humanoid")
+    local tRootPart = tHumanoid and tHumanoid.RootPart
+
+    local tHead = tCharacter:FindFirstChild("Head")
+    local accessory = tCharacter:FindFirstChildOfClass("Accessory")
+    local handle = accessory and accessory:FindFirstChild("Handle")
+
+    if not rootPart then return end
+    if not tCharacter or not targetPlayer then return end
+    if not tHumanoid then return end
+
+    if rootPart.Velocity.Magnitude < 50 then
+        getgenv().OldPos = rootPart.CFrame
+    end
+
+    if tHead then
+        workspace.CurrentCamera.CameraSubject = tHead
+    elseif not tHead and handle then
+        workspace.CurrentCamera.CameraSubject = handle
+    elseif tHumanoid and tRootPart then
+        workspace.CurrentCamera.CameraSubject = tHumanoid
+    end
+
+    if not tCharacter:FindFirstChildWhichIsA("BasePart") then return end
+
+    local FPos = function(basePart, pos, ang)
+        rootPart.CFrame = CFrame.new(basePart.Position) * pos * ang
+        character:SetPrimaryPartCFrame(CFrame.new(basePart.Position) * pos * ang)
+        rootPart.Velocity = Vector3.new(9e7, 9e7 * 10, 9e7)
+        rootPart.RotVelocity = Vector3.new(9e8, 9e8, 9e8)
+    end
+
+    local function SFBasePart(basePart)
+        local TimeToWait = 2
+        local Time = tick()
+        local Angle = 0
+
+        repeat
+            if rootPart and tHumanoid and basePart and tCharacter then
+                if basePart.Velocity.Magnitude < 50 then
+                    Angle = Angle + 100
+                    FPos(basePart, CFrame.new(0, 1.5, 0) + tHumanoid.MoveDirection * basePart.Velocity.Magnitude / 1.25, CFrame.Angles(math.rad(Angle), 0, 0))
+                    task.wait()
+                    FPos(basePart, CFrame.new(0, -1.5, 0) + tHumanoid.MoveDirection * basePart.Velocity.Magnitude / 1.25, CFrame.Angles(math.rad(Angle), 0, 0))
+                    task.wait()
+                    FPos(basePart, CFrame.new(2.25, 1.5, -2.25) + tHumanoid.MoveDirection * basePart.Velocity.Magnitude / 1.25, CFrame.Angles(math.rad(Angle), 0, 0))
+                    task.wait()
+                    FPos(basePart, CFrame.new(-2.25, -1.5, 2.25) + tHumanoid.MoveDirection * basePart.Velocity.Magnitude / 1.25, CFrame.Angles(math.rad(Angle), 0, 0))
+                    task.wait()
+                    FPos(basePart, CFrame.new(0, 1.5, 0) + tHumanoid.MoveDirection, CFrame.Angles(math.rad(Angle), 0, 0))
+                    task.wait()
+                    FPos(basePart, CFrame.new(0, -1.5, 0) + tHumanoid.MoveDirection, CFrame.Angles(math.rad(Angle), 0, 0))
+                    task.wait()
+                else
+                    FPos(basePart, CFrame.new(0, 1.5, tHumanoid.WalkSpeed), CFrame.Angles(math.rad(90), 0, 0))
+                    task.wait()
+                    FPos(basePart, CFrame.new(0, -1.5, -tHumanoid.WalkSpeed), CFrame.Angles(0, 0, 0))
+                    task.wait()
+                    FPos(basePart, CFrame.new(0, 1.5, tHumanoid.WalkSpeed), CFrame.Angles(math.rad(90), 0, 0))
+                    task.wait()
+                    if tRootPart then
+                        FPos(basePart, CFrame.new(0, 1.5, tRootPart.Velocity.Magnitude / 1.25), CFrame.Angles(math.rad(90), 0, 0))
+                        task.wait()
+                        FPos(basePart, CFrame.new(0, -1.5, -tRootPart.Velocity.Magnitude / 1.25), CFrame.Angles(0, 0, 0))
+                        task.wait()
+                        FPos(basePart, CFrame.new(0, 1.5, tRootPart.Velocity.Magnitude / 1.25), CFrame.Angles(math.rad(90), 0, 0))
+                        task.wait()
+                    end
+                    FPos(basePart, CFrame.new(0, -1.5, 0), CFrame.Angles(math.rad(90), 0, 0))
+                    task.wait()
+                    FPos(basePart, CFrame.new(0, -1.5, 0), CFrame.Angles(0, 0, 0))
+                    task.wait()
+                    FPos(basePart, CFrame.new(0, -1.5, 0), CFrame.Angles(math.rad(-90), 0, 0))
+                    task.wait()
+                    FPos(basePart, CFrame.new(0, -1.5, 0), CFrame.Angles(0, 0, 0))
+                    task.wait()
+                end
+            else
+                break
+            end
+        until basePart.Velocity.Magnitude > 500 or basePart.Parent ~= targetPlayer.Character or targetPlayer.Parent ~= game.Players or targetPlayer.Character ~= tCharacter or tHumanoid.Sit or humanoid.Health <= 0 or tick() > Time + TimeToWait
+
+        workspace.FallenPartsDestroyHeight = 0/0
+
+        local BV = Instance.new("BodyVelocity")
+        BV.Name = "EpixVel"
+        BV.Parent = rootPart
+        BV.Velocity = Vector3.new(9e8, 9e8, 9e8)
+        BV.MaxForce = Vector3.new(1/0, 1/0, 1/0)
+
+        humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, false)
+
+        if tRootPart and tHead then
+            if (tRootPart.CFrame.p - tHead.CFrame.p).Magnitude > 5 then
+                SFBasePart(tHead)
+            else
+                SFBasePart(tRootPart)
+            end
+        elseif tRootPart then
+            SFBasePart(tRootPart)
+        elseif tHead then
+            SFBasePart(tHead)
+        elseif not tHead and not tRootPart and handle then
+            SFBasePart(handle)
+        else
+            return
+        end
+
+        BV:Destroy()
+        humanoid:SetStateEnabled(Enum.HumanoidStateType.Seated, true)
+        workspace.CurrentCamera.CameraSubject = humanoid
+
+        repeat
+            rootPart.CFrame = getgenv().OldPos * CFrame.new(0, 0.5, 0)
+            character:SetPrimaryPartCFrame(getgenv().OldPos * CFrame.new(0, 0.5, 0))
+            humanoid:ChangeState("GettingUp")
+            for _, x in ipairs(character:GetChildren()) do
+                if x:IsA("BasePart") then
+                    x.Velocity, x.RotVelocity = Vector3.new(), Vector3.new()
+                end
+            end
+            task.wait()
+        until (rootPart.Position - getgenv().OldPos.p).Magnitude < 25
+
+        workspace.FallenPartsDestroyHeight = getgenv().FPDH
+    end
+
+    local lpBasePart = tHead or handle or tRootPart
+    if lpBasePart then
+        SFBasePart(lpBasePart)
+    end
+end
+
 local function KillAll()
+
     if _G.BANDITHUB_UPDATING then return end
     local localPlayer = game.Players.LocalPlayer
     if not localPlayer then return end
@@ -348,6 +490,8 @@ local function GetAllGunDrops()
 end
 
 local function IsMurdererCampingGunDrop(gd)
+    
+    
     local murderer = BanditHub.GetCurrentMurderer()
     if not murderer or not murderer.Character then return false end
     local mRoot = murderer.Character:FindFirstChild("HumanoidRootPart")
@@ -374,23 +518,6 @@ local function IsMurdererCampingGunDrop(gd)
     local CAMP_DIST = 6
     return (mRoot.Position - gdPos).Magnitude <= CAMP_DIST
 end
-
-local function WaitForGunNotCamping(gunDrop, timeoutSeconds)
-    timeoutSeconds = timeoutSeconds or 10
-    local start = tick()
-    while tick() - start < timeoutSeconds do
-        if _G.BANDITHUB_UPDATING then return false end
-        if not autoGunTPEnabled and not userEnabledThisSession then return false end
-        if not gunDrop or not gunDrop.Parent then return false end
-
-        if not IsMurdererCampingGunDrop(gunDrop) then
-            return true
-        end
-        task.wait(0.2)
-    end
-    return false
-end
-
 
 local function GetClosestGunDrop()
     local localPlayer = game.Players.LocalPlayer
@@ -449,13 +576,6 @@ local function TeleportToGunDrop(gunDrop)
         WindUI:Notify({ Title = "TP to Gun", Content = "You are dead or round inactive", Duration = 2 })
         return
     end
-
-    -- If murderer is camping this gun drop, wait until they stop.
-    local waitOk = WaitForGunNotCamping(gunDrop, 10)
-    if not waitOk then
-        return
-    end
-
     local localPlayer = game.Players.LocalPlayer
     if not localPlayer then return end
     local character = localPlayer.Character
@@ -499,6 +619,7 @@ local function TeleportToGunDrop(gunDrop)
         end
     end
 
+    
     con1 = localPlayer.Backpack.ChildAdded:Connect(function()
         checkGun()
     end)
@@ -508,6 +629,7 @@ local function TeleportToGunDrop(gunDrop)
 
     checkGun()
 
+    
     local timeoutSeconds = 0.35
     local start = tick()
     while not collected and (tick() - start) < timeoutSeconds do
@@ -520,7 +642,6 @@ local function TeleportToGunDrop(gunDrop)
     rootPart.CFrame = originalCFrame
     isTeleporting = false
 end
-
 
 CombatTab:Button({
     Title = "TP to Gun",

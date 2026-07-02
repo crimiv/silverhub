@@ -1,8 +1,8 @@
 local WindUI = BanditHub.WindUI
 local utils = BanditHub.Utils
+local config = BanditHub.Config
 
 local CombatTab = BanditHub.Window:Tab({ Title = "Combat" })
-
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local AeroServices = ReplicatedStorage:WaitForChild("Aero"):WaitForChild("AeroRemoteServices"):WaitForChild("GameService")

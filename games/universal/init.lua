@@ -28,12 +28,13 @@ if not CheckExecutor() then return end
 
 local WindUI = LoadScript("shared/windui.lua")
 local utils = LoadScript("shared/utils.lua")
+local config = LoadScript("shared/config.lua")
 
 BanditHub = BanditHub or {}
 BanditHub.WindUI = WindUI
 BanditHub.Utils = utils
+BanditHub.Config = config
 BanditHub.Toggles = BanditHub.Toggles or {}
-
 BanditHub.SettingsFile = "BanditHub/Settings.json"
 
 local function SaveSettings()

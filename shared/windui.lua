@@ -8,22 +8,22 @@ end)()
 local function DefineTheme(name, colors)
     WindUI:AddTheme({
         Name = name,
-        Primary = colors.primary or RGB(232,200,74),
+        Primary = colors.primary,
         White = colors.white,
         Black = colors.black,
         Dialog = colors.dialog,
         Background = colors.background,
         BackgroundTransparency = 0,
         Hover = colors.hover,
-        PanelBackground = colors.panelBackground or RGB(255,255,255),
+        PanelBackground = colors.panelBackground,
         PanelBackgroundTransparency = .95,
-        WindowBackground = colors.windowBackground or colors.background,
-        WindowShadow = colors.windowShadow or RGB(0,0,0),
-        WindowTopbarTitle = colors.windowTopbarTitle or colors.primary,
-        WindowTopbarAuthor = colors.windowTopbarAuthor or colors.primary,
-        WindowTopbarIcon = colors.windowTopbarIcon or colors.primary,
-        WindowTopbarButtonIcon = colors.windowTopbarButtonIcon or colors.primary,
-        WindowSearchBarBackground = colors.windowSearchBarBackground or colors.background,
+        WindowBackground = colors.windowBackground,
+        WindowShadow = colors.windowShadow,
+        WindowTopbarTitle = colors.windowTopbarTitle,
+        WindowTopbarAuthor = colors.windowTopbarAuthor,
+        WindowTopbarIcon = colors.windowTopbarIcon,
+        WindowTopbarButtonIcon = colors.windowTopbarButtonIcon,
+        WindowSearchBarBackground = colors.windowSearchBarBackground,
         TabBackground = colors.tabBackground,
         TabBackgroundHover = colors.tabBackgroundHover,
         TabBackgroundHoverTransparency = .97,
@@ -98,18 +98,16 @@ local function DefineTheme(name, colors)
 end
 
 local function Hex(hex)
-    if not hex then return RGB(232,200,74) end
     return Color3.fromHex(hex)
 end
-
 
 local function RGB(r, g, b)
     return Color3.fromRGB(r, g, b)
 end
 
-local okTheme, themeErr = pcall(function()
-    DefineTheme("Bandit", {
-        white = RGB(255,255,255),
+DefineTheme("Bandit", {
+    primary = Hex("#E8C84A"),
+    white = RGB(255,255,255),
     black = RGB(0,0,0),
     dialog = Hex("#2a1a0a"),
     background = Hex("#2c1a0c"),
@@ -170,12 +168,7 @@ local okTheme, themeErr = pcall(function()
     dropdownTabBorder = RGB(255,255,255),
     labelBackground = RGB(255,255,255),
 })
-end)
-
-if not okTheme then
-end
 
 WindUI:SetTheme("Bandit")
-
 
 return WindUI

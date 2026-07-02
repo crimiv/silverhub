@@ -18,18 +18,20 @@ local function TeleportToLobby()
         WindUI:Notify({ Title = "Error", Content = "HumanoidRootPart not found", Duration = 2 })
         return
     end
-    local target = workspace:FindFirstChild("RegularLobby")
-        and workspace.RegularLobby:FindFirstChild("MainLobby")
-        and workspace.RegularLobby.MainLobby:FindFirstChild("Parts")
-        and workspace.RegularLobby.MainLobby.Parts:GetChildren()[202]
-
-    if not target or not target:IsA("BasePart") then
-        WindUI:Notify({ Title = "Error", Content = "Lobby TP target not found", Duration = 2 })
+    local lobby = workspace:FindFirstChild("RegularLobby")
+    if not lobby then
+        WindUI:Notify({ Title = "Error", Content = "RegularLobby not found", Duration = 2 })
         return
     end
-
-    rootPart.CFrame = target.CFrame
-    WindUI:Notify({ Title = "Teleport", Content = "Teleported to lobby", Duration = 2 })
+    local parts = lobby:GetDescendants()
+    for _, part in ipairs(parts) do
+        if part:IsA("BasePart") then
+            rootPart.CFrame = part.CFrame
+            WindUI:Notify({ Title = "Teleport", Content = "Teleported to lobby", Duration = 2 })
+            return
+        end
+    end
+    WindUI:Notify({ Title = "Error", Content = "No BasePart found in lobby", Duration = 2 })
 end
 
 local function TeleportToCurrentMap()

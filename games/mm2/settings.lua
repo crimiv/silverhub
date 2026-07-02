@@ -1,10 +1,10 @@
 local WindUI = BanditHub.WindUI
+local config = BanditHub.Config
 
 local SettingsTab = BanditHub.Window:Tab({ Title = "Settings" })
 
-local themes = {"Default"}
-local currentTheme = "Default"
-
+local themes = config.themes or {"Silver", "Dark", "Light", "Neon"}
+local currentTheme = BanditHub.CurrentTheme or "Silver"
 
 SettingsTab:Dropdown({
     Title = "Theme",

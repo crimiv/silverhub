@@ -1,30 +1,35 @@
 local WindUI = BanditHub.WindUI
+
 local utils = BanditHub.Utils
+local config = BanditHub.Config
 
 local VisualTab = BanditHub.Window:Tab({ Title = "Visual" })
 
-local espEnabled
+local espEnabled = BanditHub.Toggles.espEnabled or false
 local highlightInstances = {}
 local espUpdateCooldown = 0
 
 
 local gunHighlightEnabled = BanditHub.Toggles.gunHighlightEnabled or false
-local gunHighlightInstances = {} 
+local gunHighlightInstances = {}
 local gunHighlightUpdateCooldown = 0
-local gunHighlightTimer = nil
+
+local trapHighlightEnabled = BanditHub.Toggles.trapHighlightEnabled or false
+local trapHighlightInstances = {}
+local trapUpdateCooldown = 0
+
 
 
 local function GetPlayerRoleColor(player)
     if not player then return nil end
     if utils.PlayerHasTool(player, "Knife") then
-        return Color3.fromRGB(255, 0, 0)
+        return config.colors.murderer
     elseif utils.PlayerHasTool(player, "Gun") then
-        return Color3.fromRGB(0, 100, 255)
+        return config.colors.sheriff
     else
-        return Color3.fromRGB(0, 255, 0)
+        return config.colors.innocent
     end
 end
-
 
 local function ClearESP()
     for _, highlight in pairs(highlightInstances) do
@@ -96,6 +101,67 @@ local function GetGunDropParts()
     return parts
 end
 
+local function GetTrapModels()
+    local traps = {}
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        if obj.Name == "Trap" and (obj.Parent and (obj.Parent:IsA("Folder") or obj.Parent:IsA("Model"))) then
+            table.insert(traps, obj)
+        end
+    end
+    return traps
+end
+
+local function ClearTrapHighlights()
+    for _, h in pairs(trapHighlightInstances) do
+        if h and h.Parent then h:Destroy() end
+    end
+    trapHighlightInstances = {}
+end
+
+local function UpdateTrapHighlights(force)
+    if _G.BANDITHUB_UPDATING then
+        ClearTrapHighlights()
+        return
+    end
+    if not trapHighlightEnabled then
+        if force then ClearTrapHighlights() end
+        return
+    end
+
+    local now = tick()
+    if not force and now - trapUpdateCooldown < 0.5 then return end
+    trapUpdateCooldown = now
+
+    local traps = GetTrapModels()
+    local seen = {}
+
+    for _, tr in ipairs(traps) do
+        local highlight = trapHighlightInstances[tr]
+
+        if not highlight or not highlight.Parent then
+            highlight = Instance.new("Highlight")
+            highlight.FillTransparency = 0.5
+            highlight.OutlineTransparency = 0.0
+            highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+            highlight.Parent = workspace
+            trapHighlightInstances[tr] = highlight
+        end
+        highlight.Adornee = tr
+        highlight.FillColor = Color3.fromRGB(255, 112, 10)
+        highlight.OutlineColor = Color3.fromRGB(255, 112, 10)
+        seen[tr] = true
+    end
+
+
+    for tr, highlight in pairs(trapHighlightInstances) do
+        if not seen[tr] then
+            if highlight then highlight:Destroy() end
+            trapHighlightInstances[tr] = nil
+        end
+    end
+end
+
+
 local function ClearGunDropsHighlight()
     for _, highlight in pairs(gunHighlightInstances) do
         if highlight and highlight.Parent then
@@ -137,9 +203,8 @@ local function UpdateGunDropsHighlight(force)
             gunHighlightInstances[gd] = highlight
         end
         highlight.Adornee = gd
-        highlight.FillColor = Color3.fromRGB(0, 100, 255)
-        highlight.OutlineColor = Color3.fromRGB(0, 100, 255)
-
+        highlight.FillColor = config.colors.sheriff or Color3.fromRGB(0, 255, 255)
+        highlight.OutlineColor = config.colors.sheriff or Color3.fromRGB(0, 255, 255)
         seen[gd] = true
     end
 
@@ -184,12 +249,9 @@ game.Players.PlayerAdded:Connect(function(player)
     player.CharacterAdded:Connect(function()
         if _G.BANDITHUB_UPDATING then return end
         task.wait(0.5)
-        if espEnabled then
-            UpdateESP()
-        end
+        UpdateESP()
     end)
 end)
-
 
 game.Players.PlayerRemoving:Connect(function(player)
     if _G.BANDITHUB_UPDATING then return end
@@ -214,7 +276,12 @@ game:GetService("RunService").Heartbeat:Connect(function()
     if gunHighlightEnabled then
         UpdateGunDropsHighlight(false)
     end
+
+    if trapHighlightEnabled then
+        UpdateTrapHighlights(false)
+    end
 end)
+
 
 VisualTab:Toggle({
     Title = "ESP Highlight",
@@ -228,10 +295,10 @@ VisualTab:Toggle({
             Content = espEnabled and "ESP Enabled" or "ESP Disabled",
             Duration = 2,
         })
-        if espEnabled then
-            UpdateESP()
-        else
+        if not espEnabled then
             ClearESP()
+        else
+            UpdateESP()
         end
     end
 })
@@ -258,6 +325,29 @@ VisualTab:Toggle({
     end
 })
 
+VisualTab:Toggle({
+    Title = "Trap Highlight",
+    Value = trapHighlightEnabled,
+    Callback = function(state)
+        trapHighlightEnabled = state
+        BanditHub.Toggles.trapHighlightEnabled = state
+        if BanditHub.SaveSettings then BanditHub.SaveSettings() end
+
+        WindUI:Notify({
+            Title = "Trap Highlight",
+            Content = trapHighlightEnabled and "Enabled" or "Disabled",
+            Duration = 2,
+        })
+
+        if not trapHighlightEnabled then
+            ClearTrapHighlights()
+        else
+            UpdateTrapHighlights(true)
+        end
+    end
+})
+
+
 BanditHub.GetCurrentMurderer = GetCurrentMurderer
 BanditHub.GetCurrentSheriff = GetCurrentSheriff
 
@@ -270,4 +360,10 @@ BanditHub.DisableAll = function()
     gunHighlightEnabled = false
     BanditHub.Toggles.gunHighlightEnabled = false
     ClearGunDropsHighlight()
+
+    trapHighlightEnabled = false
+    BanditHub.Toggles.trapHighlightEnabled = false
+    ClearTrapHighlights()
 end
+
+

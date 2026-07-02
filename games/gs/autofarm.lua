@@ -5,9 +5,9 @@ local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 local WindUI = BanditHub.WindUI
 local utils = BanditHub.Utils
+local config = BanditHub.Config
 
 local FarmTab = BanditHub.Window:Tab({ Title = "Auto Farm" })
-
 
 local function getPosition(obj)
     if not obj then return nil end
@@ -287,7 +287,6 @@ local stopOrbitDemonKing = createOrbitToggle("Demon King", getDemonKingPosition,
 local stopOrbitBorock = createOrbitToggle("Borock", getBorockPosition, 8, 2.0)
 
 BanditHub.DisableAll = BanditHub.DisableAll or function() end
-
 local oldDisable = BanditHub.DisableAll
 BanditHub.DisableAll = function()
     stopAutoFarm()

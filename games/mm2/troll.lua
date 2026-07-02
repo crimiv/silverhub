@@ -1,8 +1,8 @@
 local WindUI = BanditHub.WindUI
 local utils = BanditHub.Utils
+local config = BanditHub.Config
 
 local TrollTab = BanditHub.Window:Tab({ Title = "Troll" })
-
 
 local function IsSeated(player)
     local char = player.Character
@@ -16,69 +16,54 @@ local function FlingPlayer(target, silent)
         if not silent then WindUI:Notify({ Title = "Fling", Content = "Invalid target", Duration = 2 }) end
         return false
     end
-
     local localPlayer = game.Players.LocalPlayer
     local hrp = localPlayer.Character and localPlayer.Character:FindFirstChild("HumanoidRootPart")
     local tChar = target.Character
     local tHrp = tChar and tChar:FindFirstChild("HumanoidRootPart")
     local tHum = tChar and tChar:FindFirstChildOfClass("Humanoid")
-
     if not hrp or not tHrp or not tHum or tHum.Health <= 0 then
         if not silent then WindUI:Notify({ Title = "Fling", Content = "Target invalid or dead", Duration = 2 }) end
         return false
     end
-
     if IsSeated(target) then
         if not silent then WindUI:Notify({ Title = "Fling", Content = "Target is seated", Duration = 2 }) end
         return false
     end
-
     local originalFPDH = workspace.FallenPartsDestroyHeight
     workspace.FallenPartsDestroyHeight = 0/0
-
     local oldPos = hrp.CFrame
     local targetStartPos = tHrp.Position
     local launched = false
-
     local bv = Instance.new("BodyVelocity")
     bv.Velocity = Vector3.new(0, 1000000, 0)
     bv.MaxForce = Vector3.new(0, math.huge, 0)
     bv.Parent = hrp
-
     local bav = Instance.new("BodyAngularVelocity")
     bav.AngularVelocity = Vector3.new(1000000, 1000000, 1000000)
     bav.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
     bav.Parent = hrp
-
     local timeout = tick() + 3
     while tick() < timeout and not launched do
         if _G.BANDITHUB_UPDATING then break end
         if not target.Parent or tHum.Health <= 0 then break end
         hrp.CFrame = tHrp.CFrame
-
         if (tHrp.Position - targetStartPos).Magnitude > 60 or tHrp.Velocity.Magnitude > 180 then
             launched = true
             break
         end
-
         task.wait()
     end
-
     bv:Destroy()
     bav:Destroy()
-
     hrp.Velocity = Vector3.new(0,0,0)
     hrp.RotVelocity = Vector3.new(0,0,0)
     hrp.CFrame = oldPos
-
     workspace.FallenPartsDestroyHeight = originalFPDH
-
     if launched then
         if not silent then WindUI:Notify({ Title = "Fling", Content = "Flung " .. target.Name, Duration = 2 }) end
     else
         if not silent then WindUI:Notify({ Title = "Fling", Content = "Failed to fling " .. target.Name, Duration = 2 }) end
     end
-
     return launched
 end
 
@@ -108,7 +93,6 @@ TrollTab:Button({
     end
 })
 
-
 local autoFlingMurdererEnabled = BanditHub.Toggles.autoFlingMurdererEnabled or false
 local autoFlingSheriffEnabled = BanditHub.Toggles.autoFlingSheriffEnabled or false
 local autoFlingMurdererCoroutine = nil
@@ -126,12 +110,10 @@ TrollTab:Toggle({
             Content = autoFlingMurdererEnabled and "Enabled" or "Disabled",
             Duration = 2,
         })
-
         if autoFlingMurdererEnabled then
             if autoFlingMurdererCoroutine then
                 autoFlingMurdererCoroutine = nil
             end
-
             autoFlingMurdererCoroutine = coroutine.create(function()
                 while autoFlingMurdererEnabled do
                     if _G.BANDITHUB_UPDATING then break end
@@ -148,7 +130,6 @@ TrollTab:Toggle({
                     end
                 end
             end)
-
             coroutine.resume(autoFlingMurdererCoroutine)
         else
             if autoFlingMurdererCoroutine then
@@ -170,12 +151,10 @@ TrollTab:Toggle({
             Content = autoFlingSheriffEnabled and "Enabled" or "Disabled",
             Duration = 2,
         })
-
         if autoFlingSheriffEnabled then
             if autoFlingSheriffCoroutine then
                 autoFlingSheriffCoroutine = nil
             end
-
             autoFlingSheriffCoroutine = coroutine.create(function()
                 while autoFlingSheriffEnabled do
                     if _G.BANDITHUB_UPDATING then break end
@@ -192,7 +171,6 @@ TrollTab:Toggle({
                     end
                 end
             end)
-
             coroutine.resume(autoFlingSheriffCoroutine)
         else
             if autoFlingSheriffCoroutine then
@@ -202,203 +180,145 @@ TrollTab:Toggle({
     end
 })
 
+local selectedFlingPlayer = nil
+local flingDropdown = nil
 
-
-
-
-
-
-
-local autoBreakGunEnabled = BanditHub.Toggles.autoBreakGunEnabled or false
-local autoBreakGunBusy = false
-local autoBreakGunConn = nil
-local autoBreakGunLastTrigger = 0
-local AUTO_BREAK_GUN_COOLDOWN = 3
-
-
-local function GetClosestGunDrop(maxDistance)
+local function GetPlayerNamesForFling()
+    local names = {}
     local localPlayer = game.Players.LocalPlayer
-    if not localPlayer or not localPlayer.Character then return nil end
-    local root = localPlayer.Character:FindFirstChild("HumanoidRootPart")
-    if not root then return nil end
-
-    local closest = nil
-    local closestDist = maxDistance or math.huge
-    for _, obj in ipairs(workspace:GetDescendants()) do
-        if obj.Name == "GunDrop" then
-            local pos = nil
-            if obj:IsA("BasePart") then
-                pos = obj.Position
-            elseif obj:IsA("Model") then
-                local primary = obj.PrimaryPart
-                if primary then
-                    pos = primary.Position
-                else
-                    for _, part in ipairs(obj:GetDescendants()) do
-                        if part:IsA("BasePart") then
-                            pos = part.Position
-                            break
-                        end
-                    end
-                end
-            end
-            if pos then
-                local dist = (root.Position - pos).Magnitude
-                if dist < closestDist then
-                    closestDist = dist
-                    closest = obj
-                end
-            end
+    for _, player in ipairs(game.Players:GetPlayers()) do
+        if player ~= localPlayer then
+            table.insert(names, player.Name)
         end
     end
-    return closest
+    return names
 end
 
-local function TeleportToLobbyAndRespawn()
-    local lp = game.Players.LocalPlayer
-    if not lp or not lp.Character then return end
-
-    local lobby = workspace:FindFirstChild("RegularLobby")
-    if lobby and lobby:IsA("Model") then
-        local pivot = lobby:GetPivot()
-        local hrp = lp.Character:FindFirstChild("HumanoidRootPart")
-        if hrp then
-            hrp.CFrame = pivot * CFrame.new(0, 3, 0)
+local function CreateFlingDropdown()
+    if flingDropdown then
+        flingDropdown:Destroy()
+        flingDropdown = nil
+    end
+    local playerNames = GetPlayerNamesForFling()
+    if #playerNames == 0 then
+        playerNames = {"No other players"}
+        selectedFlingPlayer = nil
+    else
+        selectedFlingPlayer = playerNames[1]
+    end
+    flingDropdown = TrollTab:Dropdown({
+        Title = "Select Player to Fling",
+        Values = playerNames,
+        Default = playerNames[1] or "No other players",
+        Callback = function(value)
+            selectedFlingPlayer = value
         end
-    end
-
-    local hum = lp.Character:FindFirstChildOfClass("Humanoid")
-    if hum then
-        pcall(function()
-            hum.Health = 0
-        end)
-    end
+    })
 end
 
-local function BreakGunAndRespawn()
-    if _G.BANDITHUB_UPDATING then return end
-    if autoBreakGunBusy then return end
+CreateFlingDropdown()
 
-    local now = tick()
-    if (now - autoBreakGunLastTrigger) < AUTO_BREAK_GUN_COOLDOWN then
-        return
-    end
-
-    autoBreakGunBusy = true
-    autoBreakGunLastTrigger = now
-
-    pcall(function()
-        -- Try to grab the gun drop (teleport close, wait briefly)
-        local localPlayer = game.Players.LocalPlayer
-        if not localPlayer or not localPlayer.Character then return end
-
-        local localHum = localPlayer.Character:FindFirstChildOfClass("Humanoid")
-        if localHum and localHum.Health <= 0 then return end
-
-        local gunDrop = GetClosestGunDrop(60)
-        if not gunDrop then return end
-
-        local hrp = localPlayer.Character:FindFirstChild("HumanoidRootPart")
-        if not hrp then return end
-
-        local targetCFrame = nil
-        if gunDrop:IsA("BasePart") then
-            targetCFrame = gunDrop.CFrame
-        elseif gunDrop:IsA("Model") then
-            local primary = gunDrop.PrimaryPart
-            if primary then
-                targetCFrame = primary.CFrame
-            else
-                for _, part in ipairs(gunDrop:GetDescendants()) do
-                    if part:IsA("BasePart") then
-                        targetCFrame = part.CFrame
-                        break
-                    end
-                end
-            end
-        end
-        if not targetCFrame then return end
-
-        hrp.CFrame = targetCFrame * CFrame.new(0, 2, 0)
-
-        -- short wait to allow pickup to register
-        task.wait(0.5)
-    end)
-
-    pcall(TeleportToLobbyAndRespawn)
-
-    task.wait(0.2)
-    autoBreakGunBusy = false
-end
-
-
-TrollTab:Toggle({
-    Title = "Auto Break Gun",
-    Value = autoBreakGunEnabled,
-    Callback = function(state)
-        autoBreakGunEnabled = state
-        BanditHub.Toggles.autoBreakGunEnabled = state
-        if BanditHub.SaveSettings then BanditHub.SaveSettings() end
-
-        if not autoBreakGunEnabled then
-            if autoBreakGunConn then
-                autoBreakGunConn:Disconnect()
-                autoBreakGunConn = nil
-            end
-            return
-        end
-
-        -- Listen for new GunDrop or periodically attempt.
-        if autoBreakGunConn then
-            autoBreakGunConn:Disconnect()
-            autoBreakGunConn = nil
-        end
-
-        autoBreakGunConn = game:GetService("RunService").Stepped:Connect(function()
-            if not autoBreakGunEnabled then return end
-            if _G.BANDITHUB_UPDATING then return end
-            if autoBreakGunBusy then return end
-
-            -- If there is at least one GunDrop, attempt grab+respawn.
-            local found = nil
-            for _, obj in ipairs(workspace:GetDescendants()) do
-                if obj.Name == "GunDrop" then
-                    found = obj
-                    break
-                end
-            end
-            if found then
-                BreakGunAndRespawn()
-            end
-        end)
-
-        WindUI:Notify({
-            Title = "Auto Break Gun",
-            Content = autoBreakGunEnabled and "Enabled" or "Disabled",
-            Duration = 2,
-        })
+TrollTab:Button({
+    Title = "Refresh Players",
+    Callback = function()
+        if _G.BANDITHUB_UPDATING then return end
+        CreateFlingDropdown()
+        WindUI:Notify({ Title = "Fling Player", Content = "Player list refreshed", Duration = 2 })
     end
 })
 
+TrollTab:Button({
+    Title = "Fling Selected Player",
+    Callback = function()
+        if _G.BANDITHUB_UPDATING then return end
+        if not selectedFlingPlayer or selectedFlingPlayer == "No other players" then
+            WindUI:Notify({ Title = "Error", Content = "No valid player selected", Duration = 2 })
+            return
+        end
+        local targetPlayer = game.Players:FindFirstChild(selectedFlingPlayer)
+        if not targetPlayer then
+            WindUI:Notify({ Title = "Error", Content = "Selected player not found", Duration = 2 })
+            return
+        end
+        task.spawn(function()
+            while targetPlayer and targetPlayer.Parent do
+                if _G.BANDITHUB_UPDATING then break end
+                local launched = FlingPlayer(targetPlayer, true)
+                if launched then
+                    break
+                end
+                task.wait(0.5)
+            end
+        end)
+    end
+})
 
+local loopFlingSelectedEnabled = BanditHub.Toggles.loopFlingSelectedEnabled or false
+local loopFlingSelectedCoroutine = nil
 
+TrollTab:Toggle({
+    Title = "Loop Fling Selected Player",
+    Value = loopFlingSelectedEnabled,
+    Callback = function(state)
+        loopFlingSelectedEnabled = state
+        BanditHub.Toggles.loopFlingSelectedEnabled = state
+        if BanditHub.SaveSettings then BanditHub.SaveSettings() end
+        WindUI:Notify({
+            Title = "Loop Fling Selected Player",
+            Content = loopFlingSelectedEnabled and "Enabled" or "Disabled",
+            Duration = 2,
+        })
+        if loopFlingSelectedEnabled then
+            if loopFlingSelectedCoroutine then
+                loopFlingSelectedCoroutine = nil
+            end
+            loopFlingSelectedCoroutine = coroutine.create(function()
+                while loopFlingSelectedEnabled do
+                    if _G.BANDITHUB_UPDATING then break end
+                    if selectedFlingPlayer and selectedFlingPlayer ~= "No other players" then
+                        local targetPlayer = game.Players:FindFirstChild(selectedFlingPlayer)
+                        if targetPlayer then
+                            local launched = FlingPlayer(targetPlayer, true)
+                            if launched then
+                                task.wait(0.5)
+                            else
+                                task.wait(0.1)
+                            end
+                        else
+                            task.wait(0.5)
+                        end
+                    else
+                        task.wait(0.5)
+                    end
+                end
+            end)
+            coroutine.resume(loopFlingSelectedCoroutine)
+        else
+            if loopFlingSelectedCoroutine then
+                loopFlingSelectedCoroutine = nil
+            end
+        end
+    end
+})
+
+game.Players.PlayerAdded:Connect(CreateFlingDropdown)
+game.Players.PlayerRemoving:Connect(CreateFlingDropdown)
 
 BanditHub.DisableAll = function()
     autoFlingMurdererEnabled = false
     BanditHub.Toggles.autoFlingMurdererEnabled = false
     autoFlingSheriffEnabled = false
     BanditHub.Toggles.autoFlingSheriffEnabled = false
-
-    autoBreakGunEnabled = false
-    BanditHub.Toggles.autoBreakGunEnabled = false
-
+    loopFlingSelectedEnabled = false
+    BanditHub.Toggles.loopFlingSelectedEnabled = false
     if BanditHub.SaveSettings then BanditHub.SaveSettings() end
-
-    if autoBreakGunConn then
-        autoBreakGunConn:Disconnect()
-        autoBreakGunConn = nil
+    if autoFlingMurdererCoroutine then
+        autoFlingMurdererCoroutine = nil
     end
-    autoBreakGunBusy = false
+    if autoFlingSheriffCoroutine then
+        autoFlingSheriffCoroutine = nil
+    end
+    if loopFlingSelectedCoroutine then
+        loopFlingSelectedCoroutine = nil
+    end
 end
-
-
