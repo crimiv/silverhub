@@ -1,8 +1,8 @@
-local WindUI = LinuxHub.WindUI
-local utils = LinuxHub.Utils
-local config = LinuxHub.Config
+local WindUI = BanditHub.WindUI
+local utils = BanditHub.Utils
+local config = BanditHub.Config
 
-local CombatTab = LinuxHub.Window:Tab({ Title = "Combat" })
+local CombatTab = BanditHub.Window:Tab({ Title = "Combat" })
 
 local roundTimer = workspace:FindFirstChild("RoundTimerPart")
 
@@ -34,18 +34,18 @@ local function IsInLobby()
     return rootPart:IsDescendantOf(lobby)
 end
 
-local autoShootEnabled = LinuxHub.Toggles.autoShootEnabled or false
+local autoShootEnabled = BanditHub.Toggles.autoShootEnabled or false
 local AUTO_SHOOT_COOLDOWN = config.cooldowns.autoShoot
 local lastAutoShootTime = 0
 
 local function ShootAtMurderer(silent)
-    if _G.LINUXHUB_UPDATING then return end
+    if _G.BANDITHUB_UPDATING then return end
     local localPlayer = game.Players.LocalPlayer
     if not localPlayer then
         if not silent then WindUI:Notify({ Title = "Error", Content = "Local player not found", Duration = 2 }) end
         return
     end
-    local murderer = LinuxHub.GetCurrentMurderer()
+    local murderer = BanditHub.GetCurrentMurderer()
     if not murderer then
         if not silent then WindUI:Notify({ Title = "Error", Content = "No murderer found", Duration = 2 }) end
         return
@@ -119,7 +119,7 @@ local function ShootAtMurderer(silent)
 end
 
 game:GetService("RunService").Heartbeat:Connect(function()
-    if _G.LINUXHUB_UPDATING then return end
+    if _G.BANDITHUB_UPDATING then return end
     if autoShootEnabled then
         local now = tick()
         if now - lastAutoShootTime >= AUTO_SHOOT_COOLDOWN then
@@ -141,8 +141,8 @@ CombatTab:Toggle({
     Value = autoShootEnabled,
     Callback = function(state)
         autoShootEnabled = state
-        LinuxHub.Toggles.autoShootEnabled = state
-        if LinuxHub.SaveSettings then LinuxHub.SaveSettings() end
+        BanditHub.Toggles.autoShootEnabled = state
+        if BanditHub.SaveSettings then BanditHub.SaveSettings() end
         WindUI:Notify({
             Title = "Auto Shoot",
             Content = autoShootEnabled and "Enabled" or "Disabled",
@@ -157,7 +157,7 @@ CombatTab:Toggle({
 CombatTab:Button({
     Title = "Kill All",
     Callback = function()
-        if _G.LINUXHUB_UPDATING then return end
+        if _G.BANDITHUB_UPDATING then return end
         local localPlayer = game.Players.LocalPlayer
         if not localPlayer then
             WindUI:Notify({ Title = "Error", Content = "Local player not found", Duration = 2 })
@@ -211,7 +211,7 @@ CombatTab:Button({
 CombatTab:Button({
     Title = "Kill All Except Sheriff",
     Callback = function()
-        if _G.LINUXHUB_UPDATING then return end
+        if _G.BANDITHUB_UPDATING then return end
         local localPlayer = game.Players.LocalPlayer
         if not localPlayer then
             WindUI:Notify({ Title = "Error", Content = "Local player not found", Duration = 2 })
@@ -244,7 +244,7 @@ CombatTab:Button({
             WindUI:Notify({ Title = "Error", Content = "HandleTouched remote not found", Duration = 2 })
             return
         end
-        local sheriff = LinuxHub.GetCurrentSheriff()
+        local sheriff = BanditHub.GetCurrentSheriff()
         local killed = 0
         for _, player in pairs(game.Players:GetPlayers()) do
             if player == localPlayer then continue end
@@ -262,16 +262,16 @@ CombatTab:Button({
         else
             WindUI:Notify({ Title = "Kill All Except Sheriff", Content = "No valid players to kill", Duration = 2 })
         end
-        if LinuxHub.SaveSettings then LinuxHub.SaveSettings() end
+        if BanditHub.SaveSettings then BanditHub.SaveSettings() end
     end
 })
 
-local autoKillAllEnabled = LinuxHub.Toggles.autoKillAllEnabled or false
+local autoKillAllEnabled = BanditHub.Toggles.autoKillAllEnabled or false
 local AUTO_KILL_ALL_COOLDOWN = config.cooldowns.autoKillAll
 local lastAutoKillAllTime = 0
 
 local function KillAll()
-    if _G.LINUXHUB_UPDATING then return end
+    if _G.BANDITHUB_UPDATING then return end
     local localPlayer = game.Players.LocalPlayer
     if not localPlayer then return end
     local knife = nil
@@ -306,7 +306,7 @@ local function KillAll()
 end
 
 game:GetService("RunService").Heartbeat:Connect(function()
-    if _G.LINUXHUB_UPDATING then return end
+    if _G.BANDITHUB_UPDATING then return end
     if autoKillAllEnabled then
         local now = tick()
         if now - lastAutoKillAllTime >= AUTO_KILL_ALL_COOLDOWN then
@@ -321,8 +321,8 @@ CombatTab:Toggle({
     Value = autoKillAllEnabled,
     Callback = function(state)
         autoKillAllEnabled = state
-        LinuxHub.Toggles.autoKillAllEnabled = state
-        if LinuxHub.SaveSettings then LinuxHub.SaveSettings() end
+        BanditHub.Toggles.autoKillAllEnabled = state
+        if BanditHub.SaveSettings then BanditHub.SaveSettings() end
         WindUI:Notify({
             Title = "Auto Kill All",
             Content = autoKillAllEnabled and "Enabled" or "Disabled",
@@ -342,6 +342,36 @@ local function GetAllGunDrops()
         end
     end
     return gunDrops
+end
+
+local function IsMurdererCampingGunDrop(gd)
+    
+    
+    local murderer = BanditHub.GetCurrentMurderer()
+    if not murderer or not murderer.Character then return false end
+    local mRoot = murderer.Character:FindFirstChild("HumanoidRootPart")
+    if not mRoot then return false end
+
+    local gdPos
+    if gd:IsA("BasePart") then
+        gdPos = gd.Position
+    elseif gd:IsA("Model") then
+        local primary = gd.PrimaryPart
+        if primary then
+            gdPos = primary.Position
+        else
+            for _, part in ipairs(gd:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    gdPos = part.Position
+                    break
+                end
+            end
+        end
+    end
+    if not gdPos then return false end
+
+    local CAMP_DIST = 6
+    return (mRoot.Position - gdPos).Magnitude <= CAMP_DIST
 end
 
 local function GetClosestGunDrop()
@@ -374,20 +404,24 @@ local function GetClosestGunDrop()
             end
         end
         if gdPos then
-            local dist = (pos - gdPos).Magnitude
-            if dist < closestDist then
-                closestDist = dist
-                closest = gd
+            
+            if not IsMurdererCampingGunDrop(gd) then
+                local dist = (pos - gdPos).Magnitude
+                if dist < closestDist then
+                    closestDist = dist
+                    closest = gd
+                end
             end
         end
     end
     return closest
 end
 
+
 local isTeleporting = false
 
 local function TeleportToGunDrop(gunDrop)
-    if _G.LINUXHUB_UPDATING then return end
+    if _G.BANDITHUB_UPDATING then return end
     if not gunDrop or isTeleporting then return end
     if IsInLobby() then
         WindUI:Notify({ Title = "TP to Gun", Content = "Cannot teleport from lobby", Duration = 2 })
@@ -426,23 +460,40 @@ local function TeleportToGunDrop(gunDrop)
     rootPart.CFrame = targetCFrame
     local collected = false
     local con1, con2
+
     local function checkGun()
         if localPlayer.Backpack and localPlayer.Backpack:FindFirstChild("Gun") then
             collected = true
         elseif character and character:FindFirstChild("Gun") then
             collected = true
         end
+
         if collected then
             if con1 then con1:Disconnect() end
             if con2 then con2:Disconnect() end
         end
     end
-    con1 = localPlayer.Backpack.ChildAdded:Connect(checkGun)
-    con2 = character.ChildAdded:Connect(checkGun)
+
+    
+    con1 = localPlayer.Backpack.ChildAdded:Connect(function()
+        checkGun()
+    end)
+    con2 = character.ChildAdded:Connect(function()
+        checkGun()
+    end)
+
     checkGun()
-    task.wait(1)
-    con1:Disconnect()
-    con2:Disconnect()
+
+    
+    local timeoutSeconds = 0.35
+    local start = tick()
+    while not collected and (tick() - start) < timeoutSeconds do
+        task.wait()
+    end
+
+    if con1 then con1:Disconnect() end
+    if con2 then con2:Disconnect() end
+
     rootPart.CFrame = originalCFrame
     isTeleporting = false
 end
@@ -450,7 +501,7 @@ end
 CombatTab:Button({
     Title = "TP to Gun",
     Callback = function()
-        if _G.LINUXHUB_UPDATING then return end
+        if _G.BANDITHUB_UPDATING then return end
         local localPlayer = game.Players.LocalPlayer
         if not localPlayer then
             WindUI:Notify({ Title = "Error", Content = "Local player not found", Duration = 2 })
@@ -478,7 +529,10 @@ CombatTab:Button({
     end
 })
 
-local autoGunTPEnabled = LinuxHub.Toggles.autoGunTPEnabled or false
+
+
+local autoGunTPEnabled = BanditHub.Toggles.autoGunTPEnabled or false
+local userEnabledThisSession = false
 local gunTPTimer = nil
 local gunTPLastCheck = 0
 local currentSheriff = nil
@@ -506,8 +560,11 @@ local function CleanupAutoGunTP()
 end
 
 local function TryTeleportToGun()
-    if _G.LINUXHUB_UPDATING then return end
+    if _G.BANDITHUB_UPDATING then return end
+    
+    if not userEnabledThisSession then return end
     if not autoGunTPEnabled or isTeleporting then return end
+
     if IsInLobby() then return end
     if not IsPlayerAlive() or not IsRoundActive() then return end
     local localPlayer = game.Players.LocalPlayer
@@ -522,10 +579,12 @@ end
 local function SetupAutoGunTP()
     CleanupAutoGunTP()
     if not autoGunTPEnabled then return end
+    
     TryTeleportToGun()
+
     gunTPLastCheck = 0
     gunTPTimer = game:GetService("RunService").Stepped:Connect(function()
-        if _G.LINUXHUB_UPDATING then return end
+        if _G.BANDITHUB_UPDATING then return end
         if not autoGunTPEnabled then return end
         local now = tick()
         if now - gunTPLastCheck < 0.5 then return end
@@ -535,14 +594,14 @@ local function SetupAutoGunTP()
     local map = currentMap and workspace:FindFirstChild(currentMap)
     if map then
         mapChildAddedConnection = map.ChildAdded:Connect(function(child)
-            if _G.LINUXHUB_UPDATING then return end
+            if _G.BANDITHUB_UPDATING then return end
             if child.Name == "GunDrop" then
                 TryTeleportToGun()
             end
         end)
     end
     currentSheriff = nil
-    for player, role in pairs(LinuxHub.playerRoles) do
+    for player, role in pairs(BanditHub.playerRoles) do
         if role == "sheriff" then
             currentSheriff = player
             break
@@ -550,7 +609,7 @@ local function SetupAutoGunTP()
     end
     if currentSheriff then
         local function onSheriffCharacterRemoved()
-            if _G.LINUXHUB_UPDATING then return end
+            if _G.BANDITHUB_UPDATING then return end
             task.wait(0.1)
             TryTeleportToGun()
         end
@@ -558,7 +617,7 @@ local function SetupAutoGunTP()
             sheriffCharacterRemovedConnection = currentSheriff.Character:WaitForChild("Humanoid").Died:Connect(onSheriffCharacterRemoved)
         end
         sheriffPlayerRemovingConnection = currentSheriff.AncestryChanged:Connect(function()
-            if _G.LINUXHUB_UPDATING then return end
+            if _G.BANDITHUB_UPDATING then return end
             if not currentSheriff.Parent then
                 task.wait(0.1)
                 TryTeleportToGun()
@@ -572,8 +631,10 @@ CombatTab:Toggle({
     Value = autoGunTPEnabled,
     Callback = function(state)
         autoGunTPEnabled = state
-        LinuxHub.Toggles.autoGunTPEnabled = state
-        if LinuxHub.SaveSettings then LinuxHub.SaveSettings() end
+        userEnabledThisSession = state == true
+        BanditHub.Toggles.autoGunTPEnabled = state
+
+        if BanditHub.SaveSettings then BanditHub.SaveSettings() end
         WindUI:Notify({
             Title = "Auto TP to Gun",
             Content = autoGunTPEnabled and "Enabled" or "Disabled",
@@ -587,13 +648,15 @@ CombatTab:Toggle({
     end
 })
 
-LinuxHub.DisableAll = function()
+BanditHub.DisableAll = function()
+    userEnabledThisSession = false
     autoShootEnabled = false
-    LinuxHub.Toggles.autoShootEnabled = false
+    BanditHub.Toggles.autoShootEnabled = false
+
     autoKillAllEnabled = false
-    LinuxHub.Toggles.autoKillAllEnabled = false
+    BanditHub.Toggles.autoKillAllEnabled = false
     autoGunTPEnabled = false
-    LinuxHub.Toggles.autoGunTPEnabled = false
-    if LinuxHub.SaveSettings then LinuxHub.SaveSettings() end
+    BanditHub.Toggles.autoGunTPEnabled = false
+    if BanditHub.SaveSettings then BanditHub.SaveSettings() end
     CleanupAutoGunTP()
 end

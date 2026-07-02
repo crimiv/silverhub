@@ -1,11 +1,11 @@
-local WindUI = LinuxHub.WindUI
-local utils = LinuxHub.Utils
-local config = LinuxHub.Config
+local WindUI = BanditHub.WindUI
+local utils = BanditHub.Utils
+local config = BanditHub.Config
 
-local CombatTab = LinuxHub.Window:Tab({ Title = "Combat" })
+local CombatTab = BanditHub.Window:Tab({ Title = "Combat" })
 
 local Config = {
-    Enabled = LinuxHub.Toggles.silentAimEnabled or false,
+    Enabled = BanditHub.Toggles.silentAimEnabled or false,
     Distance = 30,
     TargetMode = "cursor",
 }
@@ -20,7 +20,7 @@ local camera = Workspace.CurrentCamera
 local targetPosition = nil
 
 local function updateTarget()
-    if _G.LINUXHUB_UPDATING then
+    if _G.BANDITHUB_UPDATING then
         targetPosition = nil
         return
     end
@@ -78,7 +78,7 @@ local function updateTarget()
 end
 
 local oldNamecall = hookmetamethod(game, "__namecall", newcclosure(function(self, ...)
-    if _G.LINUXHUB_UPDATING then return oldNamecall(self, ...) end
+    if _G.BANDITHUB_UPDATING then return oldNamecall(self, ...) end
     local method = getnamecallmethod()
     if Config.Enabled and targetPosition and self == Workspace and method == "Raycast" then
         local args = { ... }
@@ -99,8 +99,8 @@ CombatTab:Toggle({
     Value = Config.Enabled,
     Callback = function(state)
         Config.Enabled = state
-        LinuxHub.Toggles.silentAimEnabled = state
-        if LinuxHub.SaveSettings then LinuxHub.SaveSettings() end
+        BanditHub.Toggles.silentAimEnabled = state
+        if BanditHub.SaveSettings then BanditHub.SaveSettings() end
         WindUI:Notify({
             Title = "Silent Aim",
             Content = Config.Enabled and "Enabled" or "Disabled",
@@ -109,9 +109,9 @@ CombatTab:Toggle({
     end
 })
 
-LinuxHub.DisableAll = function()
+BanditHub.DisableAll = function()
     Config.Enabled = false
-    LinuxHub.Toggles.silentAimEnabled = false
-    if LinuxHub.SaveSettings then LinuxHub.SaveSettings() end
+    BanditHub.Toggles.silentAimEnabled = false
+    if BanditHub.SaveSettings then BanditHub.SaveSettings() end
     targetPosition = nil
 end

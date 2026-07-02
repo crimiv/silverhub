@@ -1,6 +1,6 @@
-local WindUI = LinuxHub.WindUI
+local WindUI = BanditHub.WindUI
 
-local AdminTab = LinuxHub.Window:Tab({ Title = "Admin" })
+local AdminTab = BanditHub.Window:Tab({ Title = "Admin" })
 
 local function LoadAdmin(url)
     local success, result = pcall(function()
