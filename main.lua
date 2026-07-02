@@ -55,6 +55,10 @@ local function PerformUpdate(newVersion)
     BANDITHUB_GEN += 1
     _G.BANDITHUB_UPDATING = true
 
+    -- reset cached UI state for adapter-based reload
+    _G.BANDITHUB_UI = _G.BANDITHUB_UI or "windui"
+
+
     _G.BANDITHUB_STATES = GetCurrentToggles()
 
     HardDisableAll()
