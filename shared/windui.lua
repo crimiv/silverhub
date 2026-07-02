@@ -107,8 +107,9 @@ local function RGB(r, g, b)
     return Color3.fromRGB(r, g, b)
 end
 
-DefineTheme("Bandit", {
-    white = RGB(255,255,255),
+local okTheme, themeErr = pcall(function()
+    DefineTheme("Bandit", {
+        white = RGB(255,255,255),
     black = RGB(0,0,0),
     dialog = Hex("#2a1a0a"),
     background = Hex("#2c1a0c"),
@@ -169,7 +170,12 @@ DefineTheme("Bandit", {
     dropdownTabBorder = RGB(255,255,255),
     labelBackground = RGB(255,255,255),
 })
+end)
+
+if not okTheme then
+end
 
 WindUI:SetTheme("Bandit")
+
 
 return WindUI
