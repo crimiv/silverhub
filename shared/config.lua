@@ -10,6 +10,6 @@ return {
         autoFling = 2,
     },
     themes = {
-        "Bandit",
+        "Linux",
     },
 }

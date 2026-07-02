@@ -1,15 +1,15 @@
-local WindUI = BanditHub.WindUI
-local utils = BanditHub.Utils
-local config = BanditHub.Config
+local WindUI = LinuxHub.WindUI
+local utils = LinuxHub.Utils
+local config = LinuxHub.Config
 
-local CombatTab = BanditHub.Window:Tab({ Title = "Combat" })
+local CombatTab = LinuxHub.Window:Tab({ Title = "Combat" })
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local AeroServices = ReplicatedStorage:WaitForChild("Aero"):WaitForChild("AeroRemoteServices"):WaitForChild("GameService")
 local AttackStart = AeroServices:WaitForChild("WeaponAttackStart")
 local AnimComplete = AeroServices:WaitForChild("WeaponAnimComplete")
 
-local autoSwingEnabled = BanditHub.Toggles.AutoSwing or false
+local autoSwingEnabled = LinuxHub.Toggles.AutoSwing or false
 local lastSwingTime = 0
 local SWING_COOLDOWN = 0.1
 
@@ -37,8 +37,8 @@ CombatTab:Toggle({
     Value = autoSwingEnabled,
     Callback = function(state)
         autoSwingEnabled = state
-        BanditHub.Toggles.AutoSwing = state
-        if BanditHub.SaveSettings then BanditHub.SaveSettings() end
+        LinuxHub.Toggles.AutoSwing = state
+        if LinuxHub.SaveSettings then LinuxHub.SaveSettings() end
         WindUI:Notify({
             Title = "Auto Swing",
             Content = state and "Enabled" or "Disabled",
@@ -50,11 +50,11 @@ CombatTab:Toggle({
     end
 })
 
-BanditHub.DisableAll = BanditHub.DisableAll or function() end
-local oldDisable = BanditHub.DisableAll
-BanditHub.DisableAll = function()
+LinuxHub.DisableAll = LinuxHub.DisableAll or function() end
+local oldDisable = LinuxHub.DisableAll
+LinuxHub.DisableAll = function()
     autoSwingEnabled = false
-    BanditHub.Toggles.AutoSwing = false
-    if BanditHub.SaveSettings then BanditHub.SaveSettings() end
+    LinuxHub.Toggles.AutoSwing = false
+    if LinuxHub.SaveSettings then LinuxHub.SaveSettings() end
     oldDisable()
 end

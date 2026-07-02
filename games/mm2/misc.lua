@@ -1,7 +1,7 @@
-local WindUI = BanditHub.WindUI
-local utils = BanditHub.Utils
+local WindUI = LinuxHub.WindUI
+local utils = LinuxHub.Utils
 
-local MiscTab = BanditHub.Window:Tab({ Title = "Misc" })
+local MiscTab = LinuxHub.Window:Tab({ Title = "Misc" })
 
 local selectedPlayerName = nil
 local playerDropdown = nil
@@ -98,7 +98,7 @@ end
 MiscTab:Button({
     Title = "Expose Murderer",
     Callback = function()
-        local murderer = BanditHub.GetCurrentMurderer()
+        local murderer = LinuxHub.GetCurrentMurderer()
         if murderer then
             SendChatMessage("Murderer is " .. murderer.Name)
             WindUI:Notify({ Title = "Expose", Content = "Murderer exposed in chat", Duration = 2 })
@@ -111,7 +111,7 @@ MiscTab:Button({
 MiscTab:Button({
     Title = "Expose Sheriff",
     Callback = function()
-        local sheriff = BanditHub.GetCurrentSheriff()
+        local sheriff = LinuxHub.GetCurrentSheriff()
         if sheriff then
             SendChatMessage("Sheriff is " .. sheriff.Name)
             WindUI:Notify({ Title = "Expose", Content = "Sheriff exposed in chat", Duration = 2 })
@@ -129,7 +129,7 @@ MiscTab:Button({
             WindUI:Notify({ Title = "Error", Content = "Local player not found", Duration = 2 })
             return
         end
-        local murderer = BanditHub.GetCurrentMurderer()
+        local murderer = LinuxHub.GetCurrentMurderer()
         if not murderer then
             WindUI:Notify({ Title = "Error", Content = "No murderer found", Duration = 2 })
             return
@@ -167,7 +167,7 @@ MiscTab:Button({
             WindUI:Notify({ Title = "Error", Content = "Local player not found", Duration = 2 })
             return
         end
-        local sheriff = BanditHub.GetCurrentSheriff()
+        local sheriff = LinuxHub.GetCurrentSheriff()
         if not sheriff then
             WindUI:Notify({ Title = "Error", Content = "No sheriff found", Duration = 2 })
             return
@@ -210,9 +210,7 @@ MiscTab:Button({
         local TeleportService = game:GetService("TeleportService")
         local currentJobId = game.JobId
         local minPlayers = 5
-        -- Keep trying until we find a server that's not too small.
-        -- (This is client-side retries; the actual availability is server-dependent.)
-        local maxAttempts = 30
+        local maxRetries = 5
         local attempts = 0
         local candidates = nil
 
@@ -245,19 +243,12 @@ MiscTab:Button({
             return
         end
 
-        -- If we didn't fetch any suitable servers, keep refetching until we either
-        -- find one that meets the minPlayers threshold or we hit maxAttempts.
-        while attempts < maxAttempts do
-            if not candidates or #candidates == 0 then
-                candidates = fetchServers()
-                if candidates and #candidates > 0 then
-                    -- continue with teleport attempts
-                else
-                    attempts = attempts + 1
-                    task.wait(1)
-                    continue
-                end
-            end
+        if #candidates == 0 then
+            WindUI:Notify({ Title = "Server Hop", Content = "No suitable servers found", Duration = 2 })
+            return
+        end
+
+        while attempts < maxRetries do
             attempts = attempts + 1
             local idx = math.random(1, #candidates)
             local targetServer = candidates[idx]
@@ -277,7 +268,7 @@ MiscTab:Button({
                         WindUI:Notify({ Title = "Server Hop", Content = "All servers are full. Try again later.", Duration = 3 })
                         return
                     end
-                    WindUI:Notify({ Title = "Server Hop", Content = "Server full, trying another... (" .. attempts .. "/" .. maxAttempts .. ")", Duration = 2 })
+                    WindUI:Notify({ Title = "Server Hop", Content = "Server full, trying another... (" .. attempts .. "/" .. maxRetries .. ")", Duration = 2 })
                 else
                     WindUI:Notify({ Title = "Error", Content = "Failed to teleport: " .. errStr, Duration = 3 })
                     return
@@ -312,7 +303,7 @@ MiscTab:Button({
     end
 })
 
-local antiFlingEnabled = BanditHub.Toggles.antiFlingEnabled or false
+local antiFlingEnabled = LinuxHub.Toggles.antiFlingEnabled or false
 local antiFlingHeartbeat = nil
 
 local function AntiFlingLoop()
@@ -366,8 +357,8 @@ MiscTab:Toggle({
     Value = antiFlingEnabled,
     Callback = function(state)
         antiFlingEnabled = state
-        BanditHub.Toggles.antiFlingEnabled = state
-        if BanditHub.SaveSettings then BanditHub.SaveSettings() end
+        LinuxHub.Toggles.antiFlingEnabled = state
+        if LinuxHub.SaveSettings then LinuxHub.SaveSettings() end
         WindUI:Notify({
             Title = "Anti-Fling",
             Content = antiFlingEnabled and "Enabled" or "Disabled",
@@ -380,10 +371,10 @@ MiscTab:Toggle({
 game.Players.PlayerAdded:Connect(CreatePlayerDropdown)
 game.Players.PlayerRemoving:Connect(CreatePlayerDropdown)
 
-BanditHub.DisableAll = function()
+LinuxHub.DisableAll = function()
     antiFlingEnabled = false
-    BanditHub.Toggles.antiFlingEnabled = false
-    if BanditHub.SaveSettings then BanditHub.SaveSettings() end
+    LinuxHub.Toggles.antiFlingEnabled = false
+    if LinuxHub.SaveSettings then LinuxHub.SaveSettings() end
     if antiFlingHeartbeat then
         antiFlingHeartbeat:Disconnect()
         antiFlingHeartbeat = nil

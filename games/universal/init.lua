@@ -1,4 +1,4 @@
-local BASE_URL = "https://raw.githubusercontent.com/crimiv/bandithub/main/"
+local BASE_URL = "https://raw.githubusercontent.com/crimiv/bandihub/main/"
 
 local function LoadScript(name)
     local script = game:HttpGet(BASE_URL .. name)
@@ -38,20 +38,20 @@ BanditHub.Toggles = BanditHub.Toggles or {}
 BanditHub.SettingsFile = "BanditHub/Settings.json"
 
 local function SaveSettings()
-    local success, result = pcall(function()
+    pcall(function()
         if not makefolder then return end
         makefolder("BanditHub")
         if not writefile then return end
         local data = {
             toggles = BanditHub.Toggles,
-            theme = BanditHub.CurrentTheme or "Bandit",
+            theme = BanditHub.CurrentTheme or "Linux",
         }
         writefile(BanditHub.SettingsFile, game:GetService("HttpService"):JSONEncode(data))
     end)
 end
 
 local function LoadSettings()
-    local success, result = pcall(function()
+    pcall(function()
         if not isfile then return end
         if isfile(BanditHub.SettingsFile) then
             local data = game:GetService("HttpService"):JSONDecode(readfile(BanditHub.SettingsFile))
@@ -69,22 +69,17 @@ end
 
 LoadSettings()
 
-local version = BANDITHUB_VERSION or "1.0.0"
-
-if BanditHub.Window then
-    pcall(function() BanditHub.Window:Close() end)
-    BanditHub.Window = nil
-end
+local version = BANDIHUB_VERSION or "1.0.0"
 
 local Window = WindUI:CreateWindow({
-    Title = "Bandit Hub v" .. version .. " (Universal)",
+    Title = "BanditHub v" .. version .. " (Universal)",
     Author = "by coolio",
     Folder = "BanditHub",
     Size = UDim2.fromOffset(580, 460),
     MinSize = Vector2.new(560, 350),
     MaxSize = Vector2.new(850, 560),
     Transparent = true,
-    Theme = BanditHub.CurrentTheme or "Bandit",
+    Theme = BanditHub.CurrentTheme or "Linux",
     Resizable = true,
     SideBarWidth = 200,
     HideSearchBar = true,
@@ -104,11 +99,11 @@ end
 LoadScript("games/universal/admin.lua")
 LoadScript("games/universal/misc.lua")
 
-if _G.BANDITHUB_STATES then
-    for key, value in pairs(_G.BANDITHUB_STATES) do
+if _G.BANDIHUB_STATES then
+    for key, value in pairs(_G.BANDIHUB_STATES) do
         BanditHub.Toggles[key] = value
     end
-    _G.BANDITHUB_STATES = nil
+    _G.BANDIHUB_STATES = nil
 end
 
 if BanditHub.RestoreStates then
@@ -116,3 +111,4 @@ if BanditHub.RestoreStates then
 end
 
 SaveSettings()
+
