@@ -2,7 +2,7 @@ local function Fetch(url)
     return game:HttpGet(url)
 end
 
-local BASE_URL = "https://raw.githubusercontent.com/crimiv/bandithub/main/"
+local BASE_URL = "https://raw.githubusercontent.com/crimiv/linuxhub/main/"
 
 local function LoadScript(name)
     local script = Fetch(BASE_URL .. name)
@@ -22,107 +22,53 @@ else
     version = "1.0.0"
 end
 
-BANDITHUB_VERSION = version
-
-local BANDITHUB_GEN = 0
-
-local function GetCurrentToggles()
-    if BanditHub and BanditHub.Toggles then
-        return BanditHub.Toggles
-    end
-    return nil
-end
-
-local function HardCloseWindow()
-    if BanditHub and BanditHub.Window then
-        pcall(function()
-            BanditHub.Window:Close()
-        end)
-        BanditHub.Window = nil
-    end
-end
-
-local function HardDisableAll()
-    if BanditHub and BanditHub.DisableAll then
-        pcall(function()
-            BanditHub.DisableAll()
-        end)
-    end
-end
+LINUXHUB_VERSION = version
 
 local function PerformUpdate(newVersion)
-    
-    BANDITHUB_GEN += 1
-    _G.BANDITHUB_UPDATING = true
-
-    _G.BANDITHUB_STATES = GetCurrentToggles()
-
-    HardDisableAll()
-    HardCloseWindow()
-
-    local WindUI = BanditHub and BanditHub.WindUI
-    if WindUI and WindUI.Notify then
-        pcall(function()
-            WindUI:Notify({
-                Title = "Updating",
-                Content = "Updating to v" .. newVersion .. "...",
-                Duration = 3,
-            })
-        end)
+    _G.LINUXHUB_UPDATING = true
+    if LinuxHub then
+        LinuxHub.Toggles = LinuxHub.Toggles or {}
+        _G.LINUXHUB_STATES = LinuxHub.Toggles
+        if LinuxHub.Window then
+            LinuxHub.Window:Close()
+        end
+        if LinuxHub.DisableAll then
+            LinuxHub.DisableAll()
+        end
+    end
+    local WindUI = LinuxHub and LinuxHub.WindUI
+    if WindUI then
+        WindUI:Notify({
+            Title = "Updating",
+            Content = "Updating to v" .. newVersion .. "...",
+            Duration = 3,
+        })
     else
-        pcall(function()
-            game:GetService("StarterGui"):SetCore("SendNotification", {
-                Title = "Updating",
-                Text = "Updating to v" .. newVersion .. "...",
-                Duration = 3,
-            })
-        end)
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "Updating",
+            Text = "Updating to v" .. newVersion .. "...",
+            Duration = 3,
+        })
     end
-
     task.wait(1)
-
-    BANDITHUB_VERSION = newVersion
-    _G.BANDITHUB_UPDATING = false
-
-    local gamesList = Fetch(BASE_URL .. "games.lua")
-    local games = assert(loadstring(gamesList))()
-
-    local placeId = game.PlaceId or game.GameId
-    local gameEntry = games[placeId]
-
-    if not gameEntry then
-        LoadScript("games/universal/init.lua")
-        return
-    end
-
-    LoadScript(gameEntry)
+    _G.LINUXHUB_UPDATING = false
+    loadstring(game:HttpGet(BASE_URL .. "main.lua"))()
 end
 
-
 task.spawn(function()
-    
-    if _G.BANDITHUB_UPDATER_THREAD then return end
-    _G.BANDITHUB_UPDATER_THREAD = true
-
     while true do
         task.wait(1)
-        if _G.BANDITHUB_UPDATING then
-            
-            continue
-        end
-
+        if _G.LINUXHUB_UPDATING then break end
         local success, newVersion = pcall(function()
             local raw = game:HttpGet(BASE_URL .. "version.txt")
             return raw:gsub("%s+", "")
         end)
-
-        if success and newVersion and newVersion ~= BANDITHUB_VERSION then
+        if success and newVersion and newVersion ~= LINUXHUB_VERSION then
             PerformUpdate(newVersion)
             break
         end
     end
 end)
-
 
 local gamesList = Fetch(BASE_URL .. "games.lua")
 local games = assert(loadstring(gamesList))()

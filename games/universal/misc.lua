@@ -1,8 +1,8 @@
-local WindUI = BanditHub.WindUI
+local WindUI = LinuxHub.WindUI
 
-local MiscTab = BanditHub.Window:Tab({ Title = "Misc" })
+local MiscTab = LinuxHub.Window:Tab({ Title = "Misc" })
 
-local antiFlingEnabled = BanditHub.Toggles.antiFlingEnabled or false
+local antiFlingEnabled = LinuxHub.Toggles.antiFlingEnabled or false
 local antiFlingHeartbeat = nil
 
 local function AntiFlingLoop()
@@ -56,8 +56,8 @@ MiscTab:Toggle({
     Value = antiFlingEnabled,
     Callback = function(state)
         antiFlingEnabled = state
-        BanditHub.Toggles.antiFlingEnabled = state
-        if BanditHub.SaveSettings then BanditHub.SaveSettings() end
+        LinuxHub.Toggles.antiFlingEnabled = state
+        if LinuxHub.SaveSettings then LinuxHub.SaveSettings() end
         WindUI:Notify({
             Title = "Anti-Fling",
             Content = antiFlingEnabled and "Enabled" or "Disabled",
@@ -145,10 +145,10 @@ MiscTab:Button({
     end
 })
 
-BanditHub.DisableAll = function()
+LinuxHub.DisableAll = function()
     antiFlingEnabled = false
-    BanditHub.Toggles.antiFlingEnabled = false
-    if BanditHub.SaveSettings then BanditHub.SaveSettings() end
+    LinuxHub.Toggles.antiFlingEnabled = false
+    if LinuxHub.SaveSettings then LinuxHub.SaveSettings() end
     if antiFlingHeartbeat then
         antiFlingHeartbeat:Disconnect()
         antiFlingHeartbeat = nil
