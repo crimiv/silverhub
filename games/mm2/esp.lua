@@ -184,9 +184,12 @@ game.Players.PlayerAdded:Connect(function(player)
     player.CharacterAdded:Connect(function()
         if _G.BANDITHUB_UPDATING then return end
         task.wait(0.5)
-        UpdateESP()
+        if espEnabled then
+            UpdateESP()
+        end
     end)
 end)
+
 
 game.Players.PlayerRemoving:Connect(function(player)
     if _G.BANDITHUB_UPDATING then return end

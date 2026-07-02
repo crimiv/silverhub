@@ -348,8 +348,6 @@ local function GetAllGunDrops()
 end
 
 local function IsMurdererCampingGunDrop(gd)
-    
-    
     local murderer = BanditHub.GetCurrentMurderer()
     if not murderer or not murderer.Character then return false end
     local mRoot = murderer.Character:FindFirstChild("HumanoidRootPart")
@@ -376,6 +374,23 @@ local function IsMurdererCampingGunDrop(gd)
     local CAMP_DIST = 6
     return (mRoot.Position - gdPos).Magnitude <= CAMP_DIST
 end
+
+local function WaitForGunNotCamping(gunDrop, timeoutSeconds)
+    timeoutSeconds = timeoutSeconds or 10
+    local start = tick()
+    while tick() - start < timeoutSeconds do
+        if _G.BANDITHUB_UPDATING then return false end
+        if not autoGunTPEnabled and not userEnabledThisSession then return false end
+        if not gunDrop or not gunDrop.Parent then return false end
+
+        if not IsMurdererCampingGunDrop(gunDrop) then
+            return true
+        end
+        task.wait(0.2)
+    end
+    return false
+end
+
 
 local function GetClosestGunDrop()
     local localPlayer = game.Players.LocalPlayer
@@ -434,6 +449,13 @@ local function TeleportToGunDrop(gunDrop)
         WindUI:Notify({ Title = "TP to Gun", Content = "You are dead or round inactive", Duration = 2 })
         return
     end
+
+    -- If murderer is camping this gun drop, wait until they stop.
+    local waitOk = WaitForGunNotCamping(gunDrop, 10)
+    if not waitOk then
+        return
+    end
+
     local localPlayer = game.Players.LocalPlayer
     if not localPlayer then return end
     local character = localPlayer.Character
@@ -477,7 +499,6 @@ local function TeleportToGunDrop(gunDrop)
         end
     end
 
-    
     con1 = localPlayer.Backpack.ChildAdded:Connect(function()
         checkGun()
     end)
@@ -487,7 +508,6 @@ local function TeleportToGunDrop(gunDrop)
 
     checkGun()
 
-    
     local timeoutSeconds = 0.35
     local start = tick()
     while not collected and (tick() - start) < timeoutSeconds do
@@ -500,6 +520,7 @@ local function TeleportToGunDrop(gunDrop)
     rootPart.CFrame = originalCFrame
     isTeleporting = false
 end
+
 
 CombatTab:Button({
     Title = "TP to Gun",
